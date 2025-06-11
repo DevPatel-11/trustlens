@@ -61,7 +61,7 @@ TRUSTLENS is a comprehensive AI-powered trust and safety platform designed to en
 ![Community Validation](CommunityValidation.png)
 
 ### Dark/Light Mode Support
-![Themes](lightMode.png)
+![Themes](LightMode.png)
 
 
 ## 🏗️ Architecture
