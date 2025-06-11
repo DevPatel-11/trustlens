@@ -35,24 +35,33 @@ TRUSTLENS is a comprehensive AI-powered trust and safety platform designed to en
 ## 📸 Screenshots
 
 ### Dashboard Overview
-![Dashboard](screenshots/01-dashboard-overview.png)
-*Real-time trust metrics and comprehensive marketplace analytics*
+![Dashboard](Dashboard1.png)
+![Dashboard](Dashboard2.png)
 
 ### AI-Powered TrustDNA Analysis
-![TrustDNA](screenshots/02-trustdna-analysis.png)
-*Advanced behavioral analysis and user profiling with AI insights*
+![TrustDNA](TrustDna.png)
 
-### Security Alert Management
-![Alerts](screenshots/03-alert-system.png)
-*Comprehensive alert system with real-time monitoring and resolution*
+### Product Tracker
+![Product Tracker](ProductTracker1.png)
+![Product Tracker](ProductTracker2.png)
 
 ### Review Authentication System
-![Review Auth](screenshots/04-review-authentication.png)
-*Multi-step review verification with AI-powered authenticity scoring*
+![Review Auth](ReviewAuth1.png)
+![Review Auth](ReviewAuth2.png)
+
+### Marketplace Simulator
+![Marketplace](Marketplace.png)
+![Marketplace](Marketplace2.png)
+
+### Alert System
+![Alert](Alert1.png)
+![Alert](Alert2.png)
+
+### Community Validation
+![Community Validation](CommunityValidation.png)
 
 ### Dark/Light Mode Support
-![Themes](screenshots/05-dark-light-mode.png)
-*Professional theming with seamless dark/light mode switching*
+![Themes](lightMode.png)
 
 
 ## 🏗️ Architecture
