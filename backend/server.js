@@ -24,10 +24,19 @@ const communityRoutes = require('./routes/communityRoutes');
 const enhancedReviewRoutes = require('./routes/enhancedReviewRoutes');
 const productLifecycleRoutes = require('./routes/productLifecycleRoutes');
 
+//auth 
+
+const authRoutes   = require('./routes/authRoutes');
+const vendorRoutes = require('./routes/vendorRoutes');
+
+// after app.use(express.json()):
+
+
 
 //dotenv.config();
 
 const app = express();
+
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
@@ -44,6 +53,11 @@ const socketHandler = new SocketHandler(io);
 
 app.use(cors());
 app.use(express.json());
+
+// Use auth routes
+app.use('/api/auth',   authRoutes);
+app.use('/api/vendor', vendorRoutes);
+
 
 // Make io available to routes
 app.use((req, res, next) => {

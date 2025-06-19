@@ -1,5 +1,28 @@
 const mongoose = require('mongoose');
 
+const inventoryAddressSchema = new mongoose.Schema({
+  vendorAddressId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Vendor.addresses'
+  },
+  // Optional embedded address fields
+  street: String,
+  city: String,
+  state: String,
+  country: String,
+  postalCode: String
+}, { _id: false });
+
+const inventorySchema = new mongoose.Schema({
+  address: inventoryAddressSchema,
+  quantity: {
+    type: Number,
+    required: true,
+    min: 0
+  }
+}, { _id: false });
+
+
 const productSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -15,7 +38,7 @@ const productSchema = new mongoose.Schema({
   },
   seller: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Vendor',
     required: true
   },
   category: {
@@ -44,9 +67,40 @@ const productSchema = new mongoose.Schema({
   averageRating: {
     type: Number,
     default: 0
+  },
+// NEW: Inventory by location
+  inventory: [inventorySchema],
+  totalSold: {
+    type: Number,
+    default: 0
+  },
+  totalReturned: {
+    type: Number,
+    default: 0
+  },
+  returnRate: {
+    type: Number,
+    default: 0,
+    set: function(v) {
+      return Number(v.toFixed(2)); // Store as 12.34 instead of 12.34567
+    }
   }
 }, {
-  timestamps: true
+  timestamps: true,
+});
+
+// Virtual for real-time return rate calculation
+productSchema.virtual('currentReturnRate').get(function() {
+  if (this.totalSold === 0) return 0;
+  return (this.totalReturned / this.totalSold) * 100;
+});
+
+// Pre-save hook to update stored return rate
+productSchema.pre('save', function(next) {
+  if (this.totalSold > 0) {
+    this.returnRate = (this.totalReturned / this.totalSold) * 100;
+  }
+  next();
 });
 
 module.exports = mongoose.model('Product', productSchema);

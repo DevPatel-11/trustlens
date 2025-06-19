@@ -9,6 +9,19 @@ const api = axios.create({
   },
 });
 
+// at top:
+
+
+// const api = axios.create({
+//   baseURL: 'http://localhost:3001/api',
+//   headers: { 'Content-Type': 'application/json' },
+// });
+
+export const signupCustomer = data => api.post('/auth/customer/signup', data);
+export const loginCustomer  = data => api.post('/auth/customer/login', data);
+export const signupVendor   = data => api.post('/vendor/vendor/signup', data);
+export const loginVendor    = data => api.post('/vendor/vendor/login', data);
+
 export const apiService = {
   // User APIs
   getUsers: () => api.get('/users'),
