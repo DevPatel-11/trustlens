@@ -1,46 +1,43 @@
-// src/App.js
+// frontend/src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 import { ThemeProvider } from './contexts/ThemeContext';
-import Navigation      from './components/Navigation';
+//import Navigation      from './components/Navigation';
+import Welcome         from './pages/Welcome';
+import CustomerSignup  from './pages/CustomerSignup';
+import CustomerLogin   from './pages/CustomerLogin';
+import VendorSignup    from './pages/VendorSignup';
+import VendorLogin     from './pages/VendorLogin';
 
-// <-- your new pages -->
-import Welcome          from './pages/Welcome';
-import CustomerSignup   from './pages/CustomerSignup';
-import CustomerLogin    from './pages/CustomerLogin';
-import VendorSignup     from './pages/VendorSignup';
-import VendorLogin      from './pages/VendorLogin';
+import AdminLogin      from './pages/AdminLogin';
+import AdminDashboard  from './pages/AdminDashboard';
 
 function App() {
   return (
     <ThemeProvider>
-      <div className="App min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
-        <Router>
-          {/* your top-level nav (if you want it on every page) */}
-          <Navigation />
+      <Router>
+ 
 
-          {/* the page content */}
+        <div className="App min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
           <Routes>
-            {/* Welcome / landing */}
             <Route path="/" element={<Welcome />} />
 
-            {/* Customer flows */}
+            {/* Customer / Vendor flows */}
             <Route path="/customer/signup" element={<CustomerSignup />} />
             <Route path="/customer/login"  element={<CustomerLogin />} />
+            <Route path="/vendor/signup"   element={<VendorSignup />} />
+            <Route path="/vendor/login"    element={<VendorLogin />} />
 
-            {/* Vendor flows */}
-            <Route path="/vendor/signup"  element={<VendorSignup />} />
-            <Route path="/vendor/login"   element={<VendorLogin />} />
+            {/* Admin */}
+            <Route path="/admin/login"     element={<AdminLogin />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
-            {/* add your protected dashboards here */}
-            {/* <Route path="/customer/dashboard" element={<Dashboard />} /> */}
-
-            {/* fallback 404 */}
-            <Route path="*" element={<div className="p-8">404: Page not found</div>} />
+            {/* 404 */}
+            <Route path="*" element={<div className="p-8">404- Not found</div>} />
           </Routes>
-        </Router>
-      </div>
+        </div>
+      </Router>
     </ThemeProvider>
   );
 }
