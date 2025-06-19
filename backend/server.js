@@ -1,7 +1,15 @@
 const express = require('express');
-const cors = require('cors');
-const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+dotenv.config();
+
+const mongoose = require('mongoose');
+
+
+
+
+const cors = require('cors');
+// const mongoose = require('mongoose');
+// const dotenv = require('dotenv');
 const http = require('http');
 const socketIo = require('socket.io');
 const SocketHandler = require('./utils/socketHandler');
@@ -16,10 +24,19 @@ const communityRoutes = require('./routes/communityRoutes');
 const enhancedReviewRoutes = require('./routes/enhancedReviewRoutes');
 const productLifecycleRoutes = require('./routes/productLifecycleRoutes');
 
+//auth 
 
-dotenv.config();
+const authRoutes   = require('./routes/authRoutes');
+const vendorRoutes = require('./routes/vendorRoutes');
+
+// after app.use(express.json()):
+
+
+
+//dotenv.config();
 
 const app = express();
+
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
@@ -36,6 +53,11 @@ const socketHandler = new SocketHandler(io);
 
 app.use(cors());
 app.use(express.json());
+
+// Use auth routes
+app.use('/api/auth',   authRoutes);
+app.use('/api/vendor', vendorRoutes);
+
 
 // Make io available to routes
 app.use((req, res, next) => {
@@ -77,7 +99,11 @@ app.get('/', (req, res) => {
 });
 
 // Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/trustlens', {
+// mongoose.connect('mongodb://localhost:27017/trustlens', {
+//   useNewUrlParser: true,
+//   useUnifiedTopology: true,
+// })
+mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
