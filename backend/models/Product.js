@@ -1,26 +1,6 @@
 const mongoose = require('mongoose');
 
-const inventoryAddressSchema = new mongoose.Schema({
-  vendorAddressId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Vendor.addresses'
-  },
-  // Optional embedded address fields
-  street: String,
-  city: String,
-  state: String,
-  country: String,
-  postalCode: String
-}, { _id: false });
 
-const inventorySchema = new mongoose.Schema({
-  address: inventoryAddressSchema,
-  quantity: {
-    type: Number,
-    required: true,
-    min: 0
-  }
-}, { _id: false });
 
 
 const productSchema = new mongoose.Schema({
@@ -69,7 +49,11 @@ const productSchema = new mongoose.Schema({
     default: 0
   },
 // NEW: Inventory by location
-  inventory: [inventorySchema],
+  quantity: {
+    type: Number,
+    required: true,
+   min: 0
+},
   totalSold: {
     type: Number,
     default: 0

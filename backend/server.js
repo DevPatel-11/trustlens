@@ -25,7 +25,7 @@ const enhancedReviewRoutes = require('./routes/enhancedReviewRoutes');
 const productLifecycleRoutes = require('./routes/productLifecycleRoutes');
 
 //auth 
-
+const adminRoutes = require('./routes/adminRoutes');
 const authRoutes   = require('./routes/authRoutes');
 const vendorRoutes = require('./routes/vendorRoutes');
 
@@ -57,7 +57,7 @@ app.use(express.json());
 // Use auth routes
 app.use('/api/auth',   authRoutes);
 app.use('/api/vendor', vendorRoutes);
-
+app.use('/api/admin',  adminRoutes);
 
 // Make io available to routes
 app.use((req, res, next) => {
