@@ -19,6 +19,7 @@ const api = axios.create({
 
 export const signupCustomer = data => api.post('/auth/customer/signup', data);
 export const loginCustomer  = data => api.post('/auth/customer/login', data);
+
 export const signupVendor   = data => api.post('/vendor/vendor/signup', data);
 export const loginVendor    = data => api.post('/vendor/vendor/login', data);
 export const loginAdmin = data => api.post('/admin/login', data);
