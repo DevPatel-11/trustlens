@@ -9,6 +9,14 @@ const api = axios.create({
   },
 });
 
+// ✅ Automatically attach token to requests if available
+api.interceptors.request.use(cfg => {
+  const token = localStorage.getItem('token');  // works for customer, vendor, or admin
+  if (token) cfg.headers.Authorization = `Bearer ${token}`;
+  return cfg;
+});
+
+
 // at top:
 
 
@@ -23,6 +31,15 @@ export const loginCustomer  = data => api.post('/auth/customer/login', data);
 export const signupVendor   = data => api.post('/vendor/vendor/signup', data);
 export const loginVendor    = data => api.post('/vendor/vendor/login', data);
 export const loginAdmin = data => api.post('/admin/login', data);
+
+
+// export const loginVendor      = data => api.post('/vendor/vendor/login', data);
+export const getVendorProfile = ()   => api.get('/vendor/profile');
+export const getVendorProducts= ()   => api.get('/vendor/products');
+export const getProductDetail = prodId => api.get(`/vendor/products/${prodId}`);
+export const createProduct = data => api.post('/products', data);
+export const deleteProduct = id => api.delete(`/products/${id}`);
+
 
 export const apiService = {
   // User APIs
