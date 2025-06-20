@@ -23,7 +23,7 @@ const predictionRoutes = require('./routes/predictionRoutes');
 const communityRoutes = require('./routes/communityRoutes');
 const enhancedReviewRoutes = require('./routes/enhancedReviewRoutes');
 const productLifecycleRoutes = require('./routes/productLifecycleRoutes');
-
+const authMiddleware = require('./middleware/authMiddleware');
 //auth 
 const adminRoutes = require('./routes/adminRoutes');
 const authRoutes   = require('./routes/authRoutes');

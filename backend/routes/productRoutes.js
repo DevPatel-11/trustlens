@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const Product = require('../models/Product');
 const ImageAnalyzer = require('../utils/imageAnalyzer');
+const protectVendor = require('../middleware/authMiddleware')('vendor');
 
 // Initialize image analyzer
 const imageAnalyzer = new ImageAnalyzer();
@@ -22,7 +23,8 @@ const upload = multer({
 });
 
 // Create a new product with AI-powered image analysis
-router.post('/', upload.array('images', 5), async (req, res) => {
+router.post('/', protectVendor, upload.array('images', 5), async (req, res) => {
+
   try {
     const productData = req.body;
     
@@ -78,9 +80,14 @@ router.post('/', upload.array('images', 5), async (req, res) => {
         riskFactors: ['no_images_provided']
       };
     }
-    
-    const product = new Product(productData);
-    await product.save();
+    const product = new Product({
+  ...req.body,
+  seller: req.vendorId  // Add seller ID from token
+});
+await product.save();
+
+    // const product = new Product(productData);
+    // await product.save();
     
     res.status(201).json({
       ...product.toObject(),
