@@ -16,7 +16,7 @@ import AddProduct from './pages/AddProduct';
 import VendorDashboard from './pages/VendorDashboard';
 import ProductDetail   from './pages/ProductDetail';
 import EditProduct from './pages/EditProduct';
-
+import CustomerDashboard from './pages/CustomerDashboard';
 function App() {
   return (
     <ThemeProvider>
@@ -32,7 +32,7 @@ function App() {
             <Route path="/customer/login"  element={<CustomerLogin />} />
             <Route path="/vendor/signup"   element={<VendorSignup />} />
             <Route path="/vendor/login"    element={<VendorLogin />} />
-
+            <Route path="/customer/dashboard" element={<CustomerDashboard />} />
             {/* Admin */}
             <Route path="/admin/login"     element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
