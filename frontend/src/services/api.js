@@ -42,6 +42,13 @@ export const deleteProduct = id => api.delete(`/products/${id}`);
 export const updateProduct = (id, data) => api.put(`/products/${id}`, data);
 
 export const apiService = {
+  getCustomerDetails: () =>
+  api.get('/auth/customer/me', {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
+    },
+  }),
+
   // User APIs
   getUsers: () => api.get('/users'),
   createUser: (userData) => api.post('/users', userData),

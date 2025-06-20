@@ -32,3 +32,5 @@ function authMiddleware(requiredRole) {
 }
 
 module.exports = authMiddleware;
+
+
