@@ -15,6 +15,7 @@ import AdminDashboard  from './pages/AdminDashboard';
 import AddProduct from './pages/AddProduct';
 import VendorDashboard from './pages/VendorDashboard';
 import ProductDetail   from './pages/ProductDetail';
+import EditProduct from './pages/EditProduct';
 
 function App() {
   return (
@@ -36,7 +37,9 @@ function App() {
             <Route path="/admin/login"     element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/vendor/add-product" element={<AddProduct />} />
-
+            <Route path="/vendor/products/:prodId/edit" element={<EditProduct />} />
+            
+            
             <Route path="/vendor/dashboard"        element={<VendorDashboard />} />
             <Route path="/vendor/products/:prodId" element={<ProductDetail />} />
             {/* 404 */}

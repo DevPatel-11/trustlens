@@ -39,7 +39,7 @@ export const getVendorProducts= ()   => api.get('/vendor/products');
 export const getProductDetail = prodId => api.get(`/vendor/products/${prodId}`);
 export const createProduct = data => api.post('/products', data);
 export const deleteProduct = id => api.delete(`/products/${id}`);
-
+export const updateProduct = (id, data) => api.put(`/products/${id}`, data);
 
 export const apiService = {
   // User APIs
@@ -52,6 +52,7 @@ export const apiService = {
   getProducts: () => api.get('/products'),
   createProduct: (productData) => api.post('/products', productData),
   getProductById: (id) => api.get(`/products/${id}`),
+  updateProduct: (id, productData) => api.put(`/products/${id}`, productData),
 
   // Review APIs
   getReviews: () => api.get('/reviews'),

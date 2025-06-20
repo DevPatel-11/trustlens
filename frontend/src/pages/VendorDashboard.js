@@ -160,6 +160,9 @@ export default function VendorDashboard() {
     <h3 className="text-xl font-medium">{p.name}</h3>
     <p className="text-gray-600">₹{p.price}</p>
   </Link>
+  <Link to={`/vendor/products/${p._id}/edit`}>Edit</Link>
+
+
   <button
     className="mt-2 text-sm text-red-600 hover:underline self-start"
     onClick={() => handleDelete(p._id)}
