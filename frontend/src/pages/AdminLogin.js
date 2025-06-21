@@ -150,15 +150,15 @@ const AdminLogin = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
               >
                 {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                     Authenticating...
-                  </>
+                  </div>
                 ) : (
-                  'Sign In to Admin Panel'
+                  'Sign in to Admin Panel'
                 )}
               </button>
             </div>
@@ -170,30 +170,32 @@ const AdminLogin = () => {
                 <div className="w-full border-t border-gray-300 dark:border-gray-600" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">Demo Credentials</span>
+                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                  Demo Credentials
+                </span>
               </div>
             </div>
 
             <div className="mt-4 text-center">
-              <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                <div><strong>Email:</strong> admin@trustlens.com</div>
-                <div><strong>Password:</strong> admin123</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+                <div>Email: <span className="font-mono text-blue-600 dark:text-blue-400">admin@trustlens.com</span></div>
+                <div>Password: <span className="font-mono text-blue-600 dark:text-blue-400">admin123</span></div>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="mt-4 text-center">
-          <button
-            onClick={() => navigate('/')}
-            className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors duration-200"
-          >
-            ← Back to Home
-          </button>
-        </div>
+      <div className="mt-8 text-center">
+        <button
+          onClick={() => navigate('/')}
+          className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors duration-200"
+        >
+          ← Back to Home
+        </button>
       </div>
     </div>
   );
 };
 
-export default AdminLogin; 
+export default AdminLogin;

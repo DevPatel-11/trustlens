@@ -25,6 +25,7 @@ const vendorSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  password:       { type: String, required: true }, 
   contactPerson: {
     name: { type: String, required: true },
     email: { type: String, required: true },

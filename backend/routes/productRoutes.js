@@ -3,6 +3,9 @@ const router = express.Router();
 const multer = require('multer');
 const Product = require('../models/Product');
 const ImageAnalyzer = require('../utils/imageAnalyzer');
+const protectVendor = require('../middleware/authMiddleware')('vendor');
+const { buyProduct, returnProduct } = require('../controllers/productController');
+const verifyToken = require('../middleware/verifyTokenMiddleware');
 
 // Initialize image analyzer
 const imageAnalyzer = new ImageAnalyzer();
@@ -22,7 +25,8 @@ const upload = multer({
 });
 
 // Create a new product with AI-powered image analysis
-router.post('/', upload.array('images', 5), async (req, res) => {
+router.post('/', protectVendor, upload.array('images', 5), async (req, res) => {
+
   try {
     const productData = req.body;
     
@@ -78,9 +82,14 @@ router.post('/', upload.array('images', 5), async (req, res) => {
         riskFactors: ['no_images_provided']
       };
     }
-    
-    const product = new Product(productData);
-    await product.save();
+    const product = new Product({
+  ...req.body,
+  seller: req.vendorId  // Add seller ID from token
+});
+await product.save();
+
+    // const product = new Product(productData);
+    // await product.save();
     
     res.status(201).json({
       ...product.toObject(),
@@ -267,6 +276,11 @@ router.get('/flagged/all', async (req, res) => {
   }
 });
 
+// User buy/return routes
+router.put('/:id/buy', verifyToken, buyProduct);
+router.put('/:id/return', verifyToken, returnProduct);
+
+// Admin tracking routes
 // Track product purchase
 router.post('/:id/purchase', async (req, res) => {
   try {
@@ -659,5 +673,4 @@ router.get('/activity/realtime', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
 module.exports = router;
