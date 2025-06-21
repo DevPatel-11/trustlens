@@ -2,6 +2,7 @@ const { HfInference } = require('@huggingface/inference');
 const natural = require('natural');
 const compromise = require('compromise');
 const Sentiment = require('sentiment');
+const TrustAnalyzer = require('./trustAnalyzer');
 
 class RealAIAnalyzer {
   constructor() {
@@ -186,8 +187,8 @@ class RealAIAnalyzer {
     return aiIndicators.length >= 2;
   }
 
-  // Advanced behavioral analysis for typing patterns
-  analyzeTypingBehaviorAdvanced(typingData, mouseData = []) {
+  // Advanced behavioral analysis for typing patterns with IP-based trust integration
+  async analyzeTypingBehaviorAdvanced(typingData, mouseData = [], userId = null) {
     if (!typingData || typingData.length < 5) {
       return { 
         classification: 'insufficient_data', 
@@ -199,6 +200,21 @@ class RealAIAnalyzer {
     // Statistical analysis
     const stats = this.calculateTypingStatistics(typingData);
     
+    // IP-based trust analysis integration
+    let ipAnalysis = null;
+    if (userId) {
+      try {
+        const User = require('../models/User');
+        const user = await User.findById(userId);
+        if (user) {
+          ipAnalysis = await TrustAnalyzer.getIPAnalysisDetails(userId);
+          console.log('🔍 IP Analysis integrated into behavioral analysis:', ipAnalysis);
+        }
+      } catch (error) {
+        console.error('Error integrating IP analysis:', error);
+      }
+    }
+    
     // Pattern analysis
     const patterns = this.analyzeTypingPatterns(typingData);
     
@@ -206,18 +222,24 @@ class RealAIAnalyzer {
     const mouseCorrelation = mouseData.length > 0 ? 
       this.analyzeMouseTypingCorrelation(typingData, mouseData) : null;
     
-    // Machine learning-style classification
-    const classification = this.classifyTypingBehavior(stats, patterns, mouseCorrelation);
+    // Machine learning-style classification with IP analysis
+    const classification = this.classifyTypingBehavior(stats, patterns, mouseCorrelation, ipAnalysis);
     
     return {
-      classification: classification.type,
-      confidence: classification.confidence,
-      analysis: {
-        statistics: stats,
-        patterns: patterns,
-        mouseCorrelation: mouseCorrelation,
-        riskFactors: classification.riskFactors
-      }
+      classification: {
+        type: classification.type,
+        confidence: classification.confidence,
+        risk: classification.type === 'Bot' ? 'High' : 
+              classification.type === 'Suspicious' ? 'Medium' : 'Low'
+      },
+      statistics: stats,
+      patterns: patterns,
+      mouseCorrelation: mouseCorrelation,
+      variance: stats.variance,
+      consistency: patterns.consistency,
+      riskFactors: classification.riskFactors,
+      ipAnalysis: ipAnalysis, // Include IP analysis in results
+      analysis: this.generateBehavioralAnalysisReport(classification, stats, patterns, ipAnalysis)
     };
   }
 
@@ -396,8 +418,8 @@ class RealAIAnalyzer {
     return data.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / data.length;
   }
 
-  // Classify typing behavior using ML-style approach
-  classifyTypingBehavior(stats, patterns, mouseCorrelation) {
+  // Classify typing behavior using ML-style approach with IP-based fraud detection
+  classifyTypingBehavior(stats, patterns, mouseCorrelation, ipAnalysis = null) {
     let botScore = 0;
     const riskFactors = [];
 
@@ -434,13 +456,31 @@ class RealAIAnalyzer {
       riskFactors.push('perfect_distribution');
     }
 
+    // IP-based fraud detection integration
+    if (ipAnalysis) {
+      if (ipAnalysis.totalUsersWithIP >= 3) {
+        botScore += 0.7; // High suspicion for multiple accounts from same IP
+        riskFactors.push(`multiple_accounts_same_ip_${ipAnalysis.totalUsersWithIP}`);
+      } else if (ipAnalysis.totalUsersWithIP === 2) {
+        botScore += 0.2; // Slight suspicion for shared IP
+        riskFactors.push('shared_ip_address');
+      }
+      
+      // Additional IP-based risk factors
+      if (ipAnalysis.riskLevel === 'High') {
+        botScore += 0.4;
+        riskFactors.push('high_ip_risk_level');
+      }
+    }
+
     const confidence = Math.min(95, botScore * 100);
     const type = botScore > 0.7 ? 'Bot' : botScore > 0.4 ? 'Suspicious' : 'Human';
 
     return {
       type,
       confidence,
-      riskFactors
+      riskFactors,
+      ipRiskContribution: ipAnalysis ? (ipAnalysis.totalUsersWithIP >= 3 ? 0.7 : ipAnalysis.totalUsersWithIP === 2 ? 0.2 : 0) : 0
     };
   }
 
@@ -459,6 +499,47 @@ class RealAIAnalyzer {
       correlationScore: correlation / Math.min(typingData.length, mouseData.length),
       isNaturalCorrelation: correlation / Math.min(typingData.length, mouseData.length) > 0.3
     };
+  }
+
+  // Generate comprehensive behavioral analysis report including IP analysis
+  generateBehavioralAnalysisReport(classification, stats, patterns, ipAnalysis) {
+    let report = `🤖 AI Analysis: ${classification.type} behavior detected with ${classification.confidence}% confidence.`;
+    
+    // Add behavioral insights
+    if (stats.variance === 0) {
+      report += ` 🚨 Perfect typing consistency indicates automated behavior.`;
+    } else if (stats.variance < 25) {
+      report += ` ⚠️ Low typing variance suggests potential automation.`;
+    } else {
+      report += ` ✅ Natural typing variance detected.`;
+    }
+    
+    // Add pattern insights
+    if (!patterns.rhythm) {
+      report += ` 🔄 Lacks natural typing rhythm.`;
+    }
+    if (!patterns.pauses) {
+      report += ` ⏸️ No thinking pauses detected.`;
+    }
+    
+    // Add IP-based insights
+    if (ipAnalysis) {
+      if (ipAnalysis.totalUsersWithIP >= 3) {
+        report += ` 🌐 HIGH RISK: ${ipAnalysis.totalUsersWithIP} accounts from IP ${ipAnalysis.ipAddress}.`;
+      } else if (ipAnalysis.totalUsersWithIP === 2) {
+        report += ` 🏠 Shared IP detected (possibly household/family).`;
+      } else {
+        report += ` ✅ Unique IP address.`;
+      }
+      
+      if (ipAnalysis.scoreAdjustment > 0) {
+        report += ` Trust score boosted by +${ipAnalysis.scoreAdjustment}.`;
+      } else if (ipAnalysis.scoreAdjustment < 0) {
+        report += ` Trust score reduced by ${ipAnalysis.scoreAdjustment}.`;
+      }
+    }
+    
+    return report;
   }
 }
 

@@ -73,6 +73,8 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/predictions', predictionRoutes);
 app.use('/api/community', communityRoutes);
+// Set socket handler for enhanced review routes
+enhancedReviewRoutes.setSocketHandler(socketHandler);
 app.use('/api/enhanced-reviews', enhancedReviewRoutes);
 app.use('/api/product-lifecycle', productLifecycleRoutes);
 

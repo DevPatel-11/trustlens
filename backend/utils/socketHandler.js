@@ -1,8 +1,11 @@
 // Real-time WebSocket handler for TRUSTLENS
+const RealAIAnalyzer = require('./realAIAnalyzer');
+
 class SocketHandler {
   constructor(io) {
     this.io = io;
     this.connectedUsers = new Map();
+    this.aiAnalyzer = new RealAIAnalyzer();
     this.setupEventHandlers();
   }
 
@@ -52,36 +55,48 @@ class SocketHandler {
     });
   }
 
-  // Handle real-time typing analysis
+  // Handle real-time typing analysis with IP-based fraud detection
   async handleTypingAnalysis(socket, data) {
     try {
       const { userId, typingCadence, timestamp } = data;
       
-      // Emit typing analysis in real-time
+      // Use RealAIAnalyzer with IP analysis integration
+      const analysis = await this.aiAnalyzer.analyzeTypingBehaviorAdvanced(
+        typingCadence, 
+        [], // No mouse data in this call
+        userId // Pass userId for IP analysis
+      );
+      
+      console.log('🤖 Advanced AI Analysis with IP integration:', analysis);
+      
+      // Emit comprehensive analysis results
       socket.emit('typing_analysis_result', {
         userId,
-        analysis: {
-          variance: this.calculateVariance(typingCadence),
-          consistency: this.calculateConsistency(typingCadence),
-          classification: this.classifyTypingPattern(typingCadence),
-          timestamp
-        }
+        typingCadence,
+        analysis,
+        timestamp
       });
 
-      // Broadcast to dashboard if suspicious
-      const classification = this.classifyTypingPattern(typingCadence);
-      if (classification.risk === 'High') {
+      // Broadcast to dashboard if suspicious or high IP risk
+      if (analysis.classification.risk === 'High' || 
+          (analysis.ipAnalysis && analysis.ipAnalysis.riskLevel === 'High')) {
         this.io.to('alerts').emit('real_time_alert', {
-          type: 'Suspicious Typing Pattern',
+          type: analysis.ipAnalysis && analysis.ipAnalysis.riskLevel === 'High' 
+                ? 'Multiple Accounts Same IP' 
+                : 'Suspicious Typing Pattern',
           userId,
           severity: 'High',
-          data: { typingCadence, classification },
+          data: { 
+            typingCadence, 
+            analysis,
+            ipAnalysis: analysis.ipAnalysis 
+          },
           timestamp: new Date()
         });
       }
     } catch (error) {
-      console.error('Typing analysis error:', error);
-      socket.emit('analysis_error', { message: 'Typing analysis failed' });
+      console.error('Advanced typing analysis error:', error);
+      socket.emit('analysis_error', { message: 'Advanced typing analysis failed' });
     }
   }
 
@@ -156,6 +171,33 @@ class SocketHandler {
       newScore,
       change: newScore - oldScore,
       reason,
+      timestamp: new Date()
+    });
+  }
+
+  // Broadcast review status updates for real-time dashboard updates
+  broadcastReviewStatusUpdate(reviewId, newStatus, adminId) {
+    console.log(`📡 Broadcasting review status update: ${reviewId} -> ${newStatus}`);
+    
+    this.io.emit('review_status_update', {
+      type: 'review_status_update',
+      reviewId,
+      newStatus,
+      adminId,
+      timestamp: new Date()
+    });
+  }
+
+  // Broadcast bulk operation completion
+  broadcastBulkOperationComplete(operation, successful, failed, adminId) {
+    console.log(`📡 Broadcasting bulk operation: ${operation} - ${successful} successful, ${failed} failed`);
+    
+    this.io.emit('bulk_operation_complete', {
+      type: 'bulk_operation_complete',
+      operation,
+      successful,
+      failed,
+      adminId,
       timestamp: new Date()
     });
   }

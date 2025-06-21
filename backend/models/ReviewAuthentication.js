@@ -26,6 +26,25 @@ const reviewAuthenticationSchema = new mongoose.Schema({
       type: Object,
       default: {}
     },
+    aiAnalysis: {
+      modelUsed: String,
+      modelVersion: String,
+      inferenceScore: Number,
+      reasoning: String,
+      huggingFaceResults: Object,
+      localAnalysisResults: Object
+    },
+    linguisticFingerprint: {
+      lexicalDiversity: Number,
+      wordCount: Number,
+      avgSentenceLength: Number,
+      sentenceVariance: Number,
+      uniqueWordRatio: Number,
+      posDistribution: Object,
+      tfidfTopTerms: [String],
+      readabilityScore: Number,
+      emotionalWords: [String]
+    },
     timestamp: {
       type: Date,
       default: Date.now
@@ -179,7 +198,7 @@ reviewAuthenticationSchema.methods.calculateAuthenticationScore = function() {
   };
   
   this.authenticationSteps.forEach(step => {
-    if (step.status === 'passed' && step.score) {
+    if (step.score !== undefined && step.score !== null) {
       const weight = stepWeights[step.step] || 0.1;
       weightedSum += step.score * weight;
       totalScore += weight;
@@ -190,7 +209,7 @@ reviewAuthenticationSchema.methods.calculateAuthenticationScore = function() {
   const credibilityBonus = this.calculateCredibilityBonus();
   
   this.overallAuthenticationScore = totalScore > 0 ? 
-    Math.min(100, (weightedSum / totalScore) * 100 + credibilityBonus) : 0;
+    Math.min(100, (weightedSum / totalScore) + credibilityBonus) : 0;
   
   return this.overallAuthenticationScore;
 };

@@ -15,16 +15,21 @@ const CommunityValidation = () => {
 
   const fetchValidationData = async () => {
     try {
-      const [validationsRes, statsRes] = await Promise.all([
+      const [validationsRes, communityStatsRes, reviewAnalyticsRes] = await Promise.all([
         fetch('http://localhost:3001/api/community'),
-        fetch('http://localhost:3001/api/community/stats/overview')
+        fetch('http://localhost:3001/api/community/stats/overview'),
+        fetch('http://localhost:3001/api/enhanced-reviews/analytics/overview')
       ]);
 
       const validationsData = await validationsRes.json();
-      const statsData = await statsRes.json();
+      const communityStatsData = await communityStatsRes.json();
+      const reviewAnalyticsData = await reviewAnalyticsRes.json();
 
       setValidations(validationsData);
-      setStats(statsData);
+      setStats({
+        ...communityStatsData,
+        reviewAnalytics: reviewAnalyticsData
+      });
       setLoading(false);
     } catch (error) {
       console.error('Error fetching validation data:', error);
@@ -34,7 +39,7 @@ const CommunityValidation = () => {
 
   const submitValidation = async (validationId) => {
   try {
-    console.log('Submitting validation:', { validationId, userVote, confidence, reasoning });
+
 
     const response = await fetch(`http://localhost:3001/api/community/${validationId}/validate`, {
       method: 'POST',
@@ -49,7 +54,7 @@ const CommunityValidation = () => {
     });
 
     const result = await response.json();
-    console.log('Validation submission result:', result);
+
 
     if (response.ok) {
       // Check if reward was earned
@@ -161,6 +166,101 @@ const CommunityValidation = () => {
           </p>
         </div>
       </div>
+
+      {/* Review Analytics Dashboard */}
+      {stats.reviewAnalytics && (
+        <div className="mb-8">
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">📊 Review Authentication Analytics</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors duration-200">
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Total Reviews</h4>
+              <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mt-2">
+                {stats.reviewAnalytics.totalReviews || 0}
+              </p>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors duration-200">
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Authentic Reviews</h4>
+              <p className="text-3xl font-bold text-green-600 dark:text-green-400 mt-2">
+                {stats.reviewAnalytics.statusBreakdown?.find(s => s._id === 'authentic')?.count || 0}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                Avg Score: {stats.reviewAnalytics.statusBreakdown?.find(s => s._id === 'authentic')?.avgScore || 0}%
+              </p>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors duration-200">
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Suspicious Reviews</h4>
+              <p className="text-3xl font-bold text-red-600 dark:text-red-400 mt-2">
+                {stats.reviewAnalytics.statusBreakdown?.find(s => s._id === 'suspicious')?.count || 0}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                Avg Score: {Math.round(stats.reviewAnalytics.statusBreakdown?.find(s => s._id === 'suspicious')?.avgScore || 0)}%
+              </p>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors duration-200">
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Under Investigation</h4>
+              <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mt-2">
+                {stats.reviewAnalytics.statusBreakdown?.find(s => s._id === 'requires_investigation')?.count || 0}
+              </p>
+            </div>
+          </div>
+
+          {/* Fraud Detection Rate */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors duration-200">
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">🔍 Fraud Detection Rate</h4>
+              <div className="space-y-3">
+                {stats.reviewAnalytics.statusBreakdown?.map((status) => {
+                  const total = stats.reviewAnalytics.totalReviews;
+                  const percentage = total > 0 ? ((status.count / total) * 100).toFixed(1) : 0;
+                  const color = status._id === 'authentic' ? 'bg-green-500' : 
+                              status._id === 'suspicious' ? 'bg-red-500' : 'bg-yellow-500';
+                  
+                  return (
+                    <div key={status._id} className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">
+                        {status._id.replace('_', ' ')}:
+                      </span>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-20 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                          <div className={`h-2 rounded-full ${color}`} style={{ width: `${percentage}%` }}></div>
+                        </div>
+                        <span className="text-sm font-bold text-gray-900 dark:text-white w-12">
+                          {percentage}%
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors duration-200">
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">⚡ Workflow Efficiency</h4>
+              <div className="space-y-3">
+                {stats.reviewAnalytics.workflowEfficiency?.map((workflow) => {
+                  const avgTime = Math.abs(workflow.avgProcessingTime || 0);
+                  return (
+                    <div key={workflow._id} className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">
+                        {workflow._id.replace('_', ' ')}:
+                      </span>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          {workflow.count} reviews
+                        </span>
+                        <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
+                          {avgTime.toFixed(1)}h avg
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Active Validations */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow transition-colors duration-200">

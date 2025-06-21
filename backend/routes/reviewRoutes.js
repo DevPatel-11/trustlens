@@ -167,4 +167,58 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+// Flag a review (for testing communityValidation updates)
+router.post('/:id/flag', async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const review = await Review.findById(req.params.id);
+    
+    if (!review) return res.status(404).json({ message: 'Review not found' });
+    
+    // Update communityValidation fields
+    review.communityValidation.flagCount += 1;
+    review.communityValidation.reportCount += 1;
+    review.communityValidation.lastUpdated = new Date();
+    
+    // If flagged multiple times, change status
+    if (review.communityValidation.flagCount >= 3) {
+      review.communityValidation.status = 'Flagged';
+      review.status = 'Flagged';
+    }
+    
+    await review.save();
+    
+    res.json({
+      success: true,
+      message: `Review flagged. Total flags: ${review.communityValidation.flagCount}`,
+      communityValidation: review.communityValidation,
+      reason: reason || 'No reason provided'
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// Add helpful vote to a review
+router.post('/:id/helpful', async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id);
+    
+    if (!review) return res.status(404).json({ message: 'Review not found' });
+    
+    review.communityValidation.helpfulVotes += 1;
+    review.communityValidation.lastUpdated = new Date();
+    
+    await review.save();
+    
+    res.json({
+      success: true,
+      message: `Helpful vote added. Total: ${review.communityValidation.helpfulVotes}`,
+      communityValidation: review.communityValidation
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
 module.exports = router;
