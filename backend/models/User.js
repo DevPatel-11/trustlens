@@ -13,12 +13,17 @@ const userSchema = new mongoose.Schema({
   },
   mobileNumber: {
     type: String,
+    sparse: true,  
     required: true,
     unique: true
   },
   password: {
     type: String,
     required: true
+  },
+  ipAddress: {
+    type: String,
+    default: null
   },
   trustScore: {
     type: Number,

@@ -11,17 +11,11 @@ const aiAnalyzer = new RealAIAnalyzer();
 router.post('/', async (req, res) => {
   try {
     const reviewData = req.body;
-    
-    console.log('🤖 Starting real AI analysis for review...');
-    
-    // Use REAL HuggingFace AI analysis
+
     const aiAnalysis = await aiAnalyzer.analyzeReviewWithHuggingFace(reviewData.content);
-    
-    // Update review data with real AI results
     reviewData.authenticityScore = aiAnalysis.authenticityScore;
     reviewData.isAIGenerated = aiAnalysis.isAIGenerated;
-    
-    // Store detailed linguistic analysis
+
     reviewData.linguisticAnalysis = {
       sentenceVariety: Math.round(aiAnalysis.localAnalysis.linguistic.complexityMetrics.lexicalDiversity * 100),
       emotionalAuthenticity: Math.min(100, Math.abs(aiAnalysis.localAnalysis.sentiment.score) * 20 + 50),
@@ -29,54 +23,35 @@ router.post('/', async (req, res) => {
       vocabularyComplexity: Math.round(aiAnalysis.localAnalysis.linguistic.complexityMetrics.morphologicalComplexity * 100),
       grammarScore: Math.min(100, aiAnalysis.localAnalysis.linguistic.complexityMetrics.readabilityScore)
     };
-    
-    // Store HuggingFace results for advanced analysis
+
     reviewData.aiAnalysisData = {
       huggingFaceResults: aiAnalysis.huggingFaceResults,
       detailedAnalysis: aiAnalysis.detailedAnalysis,
       riskFactors: aiAnalysis.isAIGenerated ? ['ai_generated_content'] : []
     };
-    
+
     const review = new Review(reviewData);
     await review.save();
-    
-    console.log(`✅ AI Analysis Complete - Authenticity: ${aiAnalysis.authenticityScore}%, AI Generated: ${aiAnalysis.isAIGenerated}`);
-    
-    // Start enhanced authentication process
-    try {
-      console.log('🔍 Starting enhanced authentication...');
-      const sourceData = {
-        ipAddress: req.ip || 'unknown',
-        deviceFingerprint: req.headers['user-agent'] || 'unknown',
-        browserInfo: req.headers['user-agent'] || 'unknown',
-        sessionData: { timestamp: new Date() }
-      };
-      
-      const authRecord = await EnhancedReviewAuth.authenticateReview(review._id, sourceData);
-      
-      res.status(201).json({
-        ...review.toObject(),
-        aiAnalysisResults: aiAnalysis,
-        enhancedAuthentication: {
-          authenticationId: authRecord._id,
-          overallScore: authRecord.overallAuthenticationScore,
-          status: authRecord.finalDecision.status,
-          workflowStage: authRecord.verificationWorkflow.currentStage,
-          fraudIndicators: authRecord.fraudIndicators.length
-        }
-      });
-    } catch (authError) {
-      console.error('Enhanced authentication failed:', authError);
-      // Return review even if enhanced auth fails
-      res.status(201).json({
-        ...review.toObject(),
-        aiAnalysisResults: aiAnalysis,
-        enhancedAuthentication: { error: 'Authentication failed', fallback: true }
-      });
-    }
-  } catch (error) {
-    console.error('Error in AI review analysis:', error);
-    res.status(400).json({ message: error.message });
+
+    const authRecord = await EnhancedReviewAuth.authenticateReview(review._id, {
+      ipAddress: req.ip,
+      deviceFingerprint: req.headers['user-agent'],
+      browserInfo: req.headers['user-agent'],
+      sessionData: { timestamp: new Date() }
+    });
+
+    res.status(201).json({
+      ...review.toObject(),
+      aiAnalysisResults: aiAnalysis,
+      enhancedAuthentication: {
+        authenticationId: authRecord._id,
+        overallScore: authRecord.overallAuthenticationScore,
+        status: authRecord.finalDecision.status
+      }
+    });
+  } catch (err) {
+    console.error('Review post error:', err);
+    res.status(400).json({ message: err.message });
   }
 });
 
@@ -162,6 +137,60 @@ router.put('/:id', async (req, res) => {
     const review = await Review.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!review) return res.status(404).json({ message: 'Review not found' });
     res.json(review);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// Flag a review (for testing communityValidation updates)
+router.post('/:id/flag', async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const review = await Review.findById(req.params.id);
+    
+    if (!review) return res.status(404).json({ message: 'Review not found' });
+    
+    // Update communityValidation fields
+    review.communityValidation.flagCount += 1;
+    review.communityValidation.reportCount += 1;
+    review.communityValidation.lastUpdated = new Date();
+    
+    // If flagged multiple times, change status
+    if (review.communityValidation.flagCount >= 3) {
+      review.communityValidation.status = 'Flagged';
+      review.status = 'Flagged';
+    }
+    
+    await review.save();
+    
+    res.json({
+      success: true,
+      message: `Review flagged. Total flags: ${review.communityValidation.flagCount}`,
+      communityValidation: review.communityValidation,
+      reason: reason || 'No reason provided'
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// Add helpful vote to a review
+router.post('/:id/helpful', async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id);
+    
+    if (!review) return res.status(404).json({ message: 'Review not found' });
+    
+    review.communityValidation.helpfulVotes += 1;
+    review.communityValidation.lastUpdated = new Date();
+    
+    await review.save();
+    
+    res.json({
+      success: true,
+      message: `Helpful vote added. Total: ${review.communityValidation.helpfulVotes}`,
+      communityValidation: review.communityValidation
+    });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }

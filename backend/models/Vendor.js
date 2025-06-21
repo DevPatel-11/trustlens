@@ -25,6 +25,7 @@ const vendorSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  password:       { type: String, required: true }, 
   contactPerson: {
     name: { type: String, required: true },
     email: { type: String, required: true },
@@ -39,6 +40,27 @@ const vendorSchema = new mongoose.Schema({
     min: 0,
     max: 5,
     default: 0
+  },
+  trustScore: {
+    type: Number,
+    min: 0,
+    max: 100,
+    default: 50
+  },
+  totalSales: {
+    type: Number,
+    default: 0
+  },
+  totalReturns: {
+    type: Number,
+    default: 0
+  },
+  overallReturnRate: {
+    type: Number,
+    default: 0,
+    set: function(v) {
+      return Number(v.toFixed(2));
+    }
   },
   isActive: {
     type: Boolean,

@@ -2,8 +2,20 @@ const express = require('express');
 const router = express.Router();
 const { AlertSystem, Alert } = require('../utils/alertSystem');
 
-// Get all active alerts
+// Get all alerts (not just active ones) - matches MongoDB Atlas collection count
 router.get('/', async (req, res) => {
+  try {
+    // NOTE: Returns ALL alerts from MongoDB to match Atlas dashboard count
+    // Changed from AlertSystem.getActiveAlerts() to show complete collection
+    const alerts = await Alert.find().sort({ createdAt: -1 });
+    res.json(alerts);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get only active alerts (new endpoint for specific filtering)
+router.get('/active', async (req, res) => {
   try {
     const alerts = await AlertSystem.getActiveAlerts();
     res.json(alerts);

@@ -187,4 +187,112 @@ router.get('/:id/alerts', async (req, res) => {
   }
 });
 
+// Get all users
+router.get('/users', async (req, res) => {
+  try {
+    const users = await User.find().select('-password');
+    res.json({ data: users });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get user by ID
+router.get('/users/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json({ data: user });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get IP analysis for a user
+router.get('/users/:id/ip-analysis', async (req, res) => {
+  try {
+    const ipAnalysis = await TrustAnalyzer.getIPAnalysisDetails(req.params.id);
+    
+    if (!ipAnalysis) {
+      return res.status(404).json({ 
+        error: 'IP analysis not available for this user',
+        message: 'User not found or no IP address recorded'
+      });
+    }
+    
+    res.json({ 
+      success: true,
+      data: ipAnalysis 
+    });
+  } catch (error) {
+    console.error('Error getting IP analysis:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Recalculate trust score for a user (includes IP analysis)
+router.post('/users/:id/recalculate-trust', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const newTrustScore = await TrustAnalyzer.calculateTrustScore(user);
+    const ipAnalysis = await TrustAnalyzer.getIPAnalysisDetails(req.params.id);
+    
+    res.json({ 
+      success: true,
+      data: {
+        userId: user._id,
+        username: user.username,
+        oldTrustScore: user.trustScore,
+        newTrustScore: newTrustScore,
+        ipAnalysis: ipAnalysis
+      }
+    });
+  } catch (error) {
+    console.error('Error recalculating trust score:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// NEW: Get seller return rate analytics
+router.get('/:id/seller-analytics', async (req, res) => {
+  try {
+    const TrustAnalyzer = require('../utils/trustAnalyzer');
+    const analytics = await TrustAnalyzer.getSellerReturnAnalytics(req.params.id);
+    
+    if (!analytics) {
+      return res.status(404).json({ message: 'Seller analytics not found' });
+    }
+    
+    res.json(analytics);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// NEW: Recalculate seller trust score with return rate
+router.post('/:id/recalculate-seller-trust', async (req, res) => {
+  try {
+    const TrustAnalyzer = require('../utils/trustAnalyzer');
+    const result = await TrustAnalyzer.calculateSellerTrustWithReturnRate(req.params.id);
+    
+    if (!result) {
+      return res.status(404).json({ message: 'Unable to recalculate seller trust score' });
+    }
+    
+    res.json({
+      success: true,
+      message: 'Seller trust score recalculated based on return rates',
+      data: result
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;

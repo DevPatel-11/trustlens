@@ -1,28 +1,5 @@
 const mongoose = require('mongoose');
 
-const inventoryAddressSchema = new mongoose.Schema({
-  vendorAddressId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Vendor.addresses'
-  },
-  // Optional embedded address fields
-  street: String,
-  city: String,
-  state: String,
-  country: String,
-  postalCode: String
-}, { _id: false });
-
-const inventorySchema = new mongoose.Schema({
-  address: inventoryAddressSchema,
-  quantity: {
-    type: Number,
-    required: true,
-    min: 0
-  }
-}, { _id: false });
-
-
 const productSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -69,7 +46,11 @@ const productSchema = new mongoose.Schema({
     default: 0
   },
 // NEW: Inventory by location
-  inventory: [inventorySchema],
+  quantity: {
+    type: Number,
+    required: true,
+   min: 0
+},
   totalSold: {
     type: Number,
     default: 0
@@ -84,6 +65,42 @@ const productSchema = new mongoose.Schema({
     set: function(v) {
       return Number(v.toFixed(2)); // Store as 12.34 instead of 12.34567
     }
+  },
+  // NEW: Admin audit trail
+  adminLogs: [{
+    action: {
+      type: String,
+      required: true
+    },
+    performedBy: {
+      type: String,
+      default: 'admin'
+    },
+    timestamp: {
+      type: Date,
+      default: Date.now
+    },
+    details: {
+      type: mongoose.Schema.Types.Mixed
+    },
+    oldValue: {
+      type: mongoose.Schema.Types.Mixed
+    },
+    newValue: {
+      type: mongoose.Schema.Types.Mixed
+    }
+  }],
+  
+  // NEW: Fraud detection fields
+  fraudFlagged: {
+    type: Boolean,
+    default: false
+  },
+  fraudTimestamp: {
+    type: Date
+  },
+  fraudReason: {
+    type: String
   }
 }, {
   timestamps: true,

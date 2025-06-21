@@ -3,6 +3,9 @@ const router = express.Router();
 const multer = require('multer');
 const Product = require('../models/Product');
 const ImageAnalyzer = require('../utils/imageAnalyzer');
+const protectVendor = require('../middleware/authMiddleware')('vendor');
+const { buyProduct, returnProduct } = require('../controllers/productController');
+const verifyToken = require('../middleware/verifyTokenMiddleware');
 
 // Initialize image analyzer
 const imageAnalyzer = new ImageAnalyzer();
@@ -22,7 +25,8 @@ const upload = multer({
 });
 
 // Create a new product with AI-powered image analysis
-router.post('/', upload.array('images', 5), async (req, res) => {
+router.post('/', protectVendor, upload.array('images', 5), async (req, res) => {
+
   try {
     const productData = req.body;
     
@@ -78,9 +82,14 @@ router.post('/', upload.array('images', 5), async (req, res) => {
         riskFactors: ['no_images_provided']
       };
     }
-    
-    const product = new Product(productData);
-    await product.save();
+    const product = new Product({
+  ...req.body,
+  seller: req.vendorId  // Add seller ID from token
+});
+await product.save();
+
+    // const product = new Product(productData);
+    // await product.save();
     
     res.status(201).json({
       ...product.toObject(),
@@ -131,8 +140,51 @@ router.post('/analyze-image', upload.single('image'), async (req, res) => {
 // Get all products with image analysis data
 router.get('/', async (req, res) => {
   try {
-    const products = await Product.find().populate('seller', 'username email');
-    res.json(products);
+    const products = await Product.find().populate({
+      path: 'seller',
+      select: 'name companyEmail contactPerson trustScore overallReturnRate rating'
+    });
+    
+    // Calculate and ensure return rates are up to date
+    const productsWithReturnRates = products.map(product => {
+      const productObj = product.toObject();
+      
+      // Map seller to vendor for frontend compatibility
+      if (productObj.seller) {
+        productObj.vendor = {
+          _id: productObj.seller._id,
+          name: productObj.seller.name,
+          email: productObj.seller.companyEmail || productObj.seller.contactPerson?.email,
+          username: productObj.seller.contactPerson?.name || productObj.seller.name.split(' ')[0],
+          trustScore: productObj.seller.trustScore || 0,
+          returnRate: productObj.seller.overallReturnRate || 0,
+          rating: productObj.seller.rating || 0
+        };
+      } else {
+        productObj.vendor = null;
+      }
+      
+      // Calculate current return rate
+      const currentReturnRate = product.totalSold > 0 
+        ? (product.totalReturned / product.totalSold) * 100 
+        : 0;
+      
+      // Update the return rate if it's different
+      if (Math.abs(product.returnRate - currentReturnRate) > 0.01) {
+        Product.findByIdAndUpdate(product._id, { returnRate: currentReturnRate }).exec();
+      }
+      
+      // Add calculated fields to response
+      productObj.currentReturnRate = parseFloat(currentReturnRate.toFixed(2));
+      productObj.returnRateCategory = currentReturnRate > 50 ? 'High' :
+                                     currentReturnRate > 20 ? 'Medium' : 'Low';
+      productObj.returnRateColor = currentReturnRate > 50 ? 'red' :
+                                  currentReturnRate > 20 ? 'yellow' : 'green';
+      
+      return productObj;
+    });
+    
+    res.json(productsWithReturnRates);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -141,10 +193,30 @@ router.get('/', async (req, res) => {
 // Get product by ID with detailed image analysis
 router.get('/:id', async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id).populate('seller', 'username email');
+    const product = await Product.findById(req.params.id).populate({
+      path: 'seller',
+      select: 'name companyEmail contactPerson trustScore overallReturnRate rating'
+    });
     if (!product) return res.status(404).json({ message: 'Product not found' });
     
-    res.json(product);
+    const productObj = product.toObject();
+    
+    // Map seller to vendor for frontend compatibility
+    if (productObj.seller) {
+      productObj.vendor = {
+        _id: productObj.seller._id,
+        name: productObj.seller.name,
+        email: productObj.seller.companyEmail || productObj.seller.contactPerson?.email,
+        username: productObj.seller.contactPerson?.name || productObj.seller.name.split(' ')[0],
+        trustScore: productObj.seller.trustScore || 0,
+        returnRate: productObj.seller.overallReturnRate || 0,
+        rating: productObj.seller.rating || 0
+      };
+    } else {
+      productObj.vendor = null;
+    }
+    
+    res.json(productObj);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -204,4 +276,401 @@ router.get('/flagged/all', async (req, res) => {
   }
 });
 
+// User buy/return routes
+router.put('/:id/buy', verifyToken, buyProduct);
+router.put('/:id/return', verifyToken, returnProduct);
+
+// Admin tracking routes
+// Track product purchase
+router.post('/:id/purchase', async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id).populate('seller');
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+    
+    const oldTotalSold = product.totalSold;
+    const oldReturnRate = product.returnRate;
+    
+    // Increment total sold
+    product.totalSold += 1;
+    
+    // Add audit log
+    product.adminLogs.push({
+      action: 'purchase_tracked',
+      performedBy: 'admin',
+      timestamp: new Date(),
+      details: {
+        reason: 'Admin tracked a purchase for this product'
+      },
+      oldValue: {
+        totalSold: oldTotalSold,
+        returnRate: oldReturnRate
+      },
+      newValue: {
+        totalSold: product.totalSold,
+        returnRate: product.returnRate
+      }
+    });
+    
+    await product.save();
+    
+    console.log(`📦 Purchase tracked for product: ${product.name} (Total sold: ${product.totalSold})`);
+    
+    res.json({
+      success: true,
+      message: 'Purchase tracked successfully',
+      product: {
+        _id: product._id,
+        name: product.name,
+        totalSold: product.totalSold,
+        totalReturned: product.totalReturned,
+        returnRate: product.returnRate
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Track product return
+router.post('/:id/return', async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const product = await Product.findById(req.params.id).populate('seller');
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+    
+    const oldTotalReturned = product.totalReturned;
+    const oldReturnRate = product.returnRate;
+    
+    // Increment total returned
+    product.totalReturned += 1;
+    
+    // Add audit log
+    product.adminLogs.push({
+      action: 'return_tracked',
+      performedBy: 'admin',
+      timestamp: new Date(),
+      details: {
+        reason: reason || 'Not specified',
+        description: 'Admin tracked a return for this product'
+      },
+      oldValue: {
+        totalReturned: oldTotalReturned,
+        returnRate: oldReturnRate
+      },
+      newValue: {
+        totalReturned: product.totalReturned,
+        returnRate: product.returnRate
+      }
+    });
+    
+    await product.save();
+    
+    console.log(`🔄 Return tracked for product: ${product.name} (Total returned: ${product.totalReturned}, Rate: ${product.returnRate}%)`);
+    
+    // Recalculate seller trust score based on new return rate
+    if (product.seller) {
+      const TrustAnalyzer = require('../utils/trustAnalyzer');
+      const trustResult = await TrustAnalyzer.calculateSellerTrustWithReturnRate(product.seller._id);
+      
+      // Add trust recalculation to audit log
+      if (trustResult) {
+        product.adminLogs.push({
+          action: 'trust_recalculated',
+          performedBy: 'system',
+          timestamp: new Date(),
+          details: {
+            reason: 'Trust score recalculated due to return tracking',
+            sellerType: trustResult.sellerType,
+            trustScoreChange: trustResult.trustScoreChange
+          },
+          oldValue: {
+            sellerTrustScore: trustResult.oldTrustScore
+          },
+          newValue: {
+            sellerTrustScore: trustResult.newTrustScore
+          }
+        });
+        await product.save();
+      }
+    }
+    
+    res.json({
+      success: true,
+      message: 'Return tracked successfully',
+      product: {
+        _id: product._id,
+        name: product.name,
+        totalSold: product.totalSold,
+        totalReturned: product.totalReturned,
+        returnRate: product.returnRate,
+        reason: reason || 'Not specified'
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get product return analytics
+router.get('/:id/return-analytics', async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id).populate('seller', 'username email');
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+    
+    const analytics = {
+      productId: product._id,
+      productName: product.name,
+      seller: product.seller,
+      totalSold: product.totalSold,
+      totalReturned: product.totalReturned,
+      returnRate: product.returnRate,
+      returnRateCategory: product.returnRate > 50 ? 'High' :
+                         product.returnRate > 20 ? 'Medium' : 'Low',
+      trustImpact: {
+        penalty: product.returnRate > 50 ? -15 :
+                product.returnRate > 20 ? -7 : +5,
+        description: product.returnRate > 50 ? 'High return rate penalty' :
+                    product.returnRate > 20 ? 'Medium return rate penalty' : 'Low return rate bonus'
+      }
+    };
+    
+    res.json(analytics);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get product audit logs
+router.get('/:id/audit-logs', async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id).select('adminLogs name');
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+    
+    // Sort logs by timestamp (newest first)
+    const sortedLogs = product.adminLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    res.json({
+      productId: product._id,
+      productName: product.name,
+      auditLogs: sortedLogs,
+      totalLogs: sortedLogs.length
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Inject fraud scenario - actually modify database records
+router.post('/inject-fraud', async (req, res) => {
+  try {
+    // Import AlertSystem for creating alerts
+    const { AlertSystem } = require('../utils/alertSystem');
+    
+    // Find products that don't have fraud flags yet
+    const productsToFlag = await Product.find({ 
+      $or: [
+        { fraudFlagged: { $ne: true } },
+        { fraudFlagged: { $exists: false } }
+      ]
+    }).populate('seller', 'name').limit(3);
+    
+    if (productsToFlag.length === 0) {
+      return res.json({ 
+        message: 'No products available to flag for fraud',
+        fraudCount: 0,
+        activities: [],
+        alertsCreated: []
+      });
+    }
+    
+    const activities = [];
+    const updatedProducts = [];
+    const alertsCreated = [];
+    
+    for (const product of productsToFlag) {
+      // Force low authenticity score and set fraud flag
+      const newScore = Math.floor(Math.random() * 30) + 20; // 20-49%
+      
+      await Product.findByIdAndUpdate(product._id, {
+        authenticityScore: newScore,
+        fraudFlagged: true,
+        status: 'Flagged',
+        fraudTimestamp: new Date()
+      });
+      
+      // Create alert for fraud detection
+      const alert = await AlertSystem.createAlert({
+        type: 'Fake Review Detection', // Use enum value from schema
+        target: product._id.toString(),
+        targetType: 'Product',
+        severity: newScore < 30 ? 'Critical' : 'High',
+        description: `FRAUD INJECTION: Product "${product.name}" flagged with ${newScore}% authenticity score`,
+        data: { 
+          originalScore: product.authenticityScore,
+          newScore: newScore,
+          vendor: product.seller?.name || 'Unknown',
+          fraudInjected: true,
+          injectionTimestamp: new Date()
+        },
+        actions: ['Flag Account', 'Remove Content', 'Manual Review']
+      });
+      
+      if (alert) {
+        alertsCreated.push({
+          alertId: alert._id,
+          productId: product._id,
+          severity: alert.severity,
+          description: alert.description
+        });
+      }
+      
+      activities.push({
+        id: Date.now() + Math.random(),
+        message: `🚨 FRAUD INJECTED: "${product.name.substring(0, 30)}..." flagged (${newScore}% authenticity)`,
+        vendor: product.seller?.name || 'Unknown Vendor',
+        product: product.name,
+        timestamp: new Date().toISOString(),
+        type: 'fraud',
+        authenticityScore: newScore
+      });
+      
+      updatedProducts.push({
+        _id: product._id,
+        name: product.name,
+        newAuthenticityScore: newScore,
+        vendor: product.seller?.name || 'Unknown'
+      });
+    }
+    
+    console.log(`🚨 Fraud injection complete: ${productsToFlag.length} products flagged, ${alertsCreated.length} alerts created`);
+    
+    res.json({
+      message: `Successfully injected fraud into ${productsToFlag.length} products`,
+      fraudCount: productsToFlag.length,
+      activities: activities,
+      updatedProducts: updatedProducts,
+      alertsCreated: alertsCreated
+    });
+    
+  } catch (error) {
+    console.error('Error injecting fraud:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get real-time marketplace stats
+router.get('/stats/realtime', async (req, res) => {
+  try {
+    // Count total products
+    const totalProducts = await Product.countDocuments();
+    
+    // Count fraud products (authenticityScore < 70)
+    const fraudProducts = await Product.countDocuments({ 
+      authenticityScore: { $lt: 70, $gt: 0 } 
+    });
+    
+    // Calculate real fraud detection rate
+    const fraudDetectionRate = totalProducts > 0 ? 
+      ((fraudProducts / totalProducts) * 100).toFixed(1) : 0;
+    
+    // Get total transactions from all users
+    const User = require('../models/User');
+    const users = await User.find({}, 'transactionCount');
+    const totalTransactions = users.reduce((sum, user) => sum + (user.transactionCount || 0), 0);
+    
+    // Get products with reviews for review-based transactions
+    const productsWithReviews = await Product.find({ reviewCount: { $gt: 0 } }, 'reviewCount');
+    const reviewBasedTransactions = productsWithReviews.reduce((sum, product) => sum + (product.reviewCount || 0), 0);
+    
+    // Combine both transaction counts
+    const combinedTransactions = totalTransactions + reviewBasedTransactions;
+    
+    res.json({
+      totalProducts,
+      fraudProducts,
+      fraudDetectionRate: parseFloat(fraudDetectionRate),
+      totalTransactions: combinedTransactions,
+      userTransactions: totalTransactions,
+      reviewTransactions: reviewBasedTransactions,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('Error getting realtime stats:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get real activity feed from database changes
+router.get('/activity/realtime', async (req, res) => {
+  try {
+    // Get recent products sorted by creation/update time
+    const recentProducts = await Product.find()
+      .populate('seller', 'name')
+      .sort({ updatedAt: -1, createdAt: -1 })
+      .limit(10);
+    
+    const activities = [];
+    
+    for (const product of recentProducts) {
+      const timeDiff = Date.now() - new Date(product.updatedAt).getTime();
+      const isRecent = timeDiff < 30 * 60 * 1000; // 30 minutes
+      
+      if (isRecent || activities.length < 5) {
+        // Real authenticity events
+        if (product.fraudFlagged) {
+          activities.push({
+            id: `fraud-${product._id}`,
+            message: `🚨 FRAUD DETECTED: "${product.name.substring(0, 25)}..." flagged for review`,
+            vendor: product.seller?.name || 'Unknown Vendor',
+            timestamp: product.fraudTimestamp || product.updatedAt,
+            type: 'fraud'
+          });
+        } else if (product.authenticityScore < 70 && product.authenticityScore > 0) {
+          activities.push({
+            id: `low-auth-${product._id}`,
+            message: `⚡ LOW AUTHENTICITY: "${product.name.substring(0, 25)}..." scored ${product.authenticityScore}%`,
+            vendor: product.seller?.name || 'Unknown Vendor',
+            timestamp: product.updatedAt,
+            type: 'warning'
+          });
+        } else if (product.authenticityScore >= 90) {
+          activities.push({
+            id: `high-auth-${product._id}`,
+            message: `✅ HIGH AUTHENTICITY: "${product.name.substring(0, 25)}..." verified at ${product.authenticityScore}%`,
+            vendor: product.seller?.name || 'Unknown Vendor',
+            timestamp: product.updatedAt,
+            type: 'success'
+          });
+        }
+        
+        // Review-based activities
+        if (product.reviewCount > 0) {
+          activities.push({
+            id: `review-${product._id}`,
+            message: `📝 Review analysis: "${product.name.substring(0, 25)}..." (${product.reviewCount} reviews)`,
+            vendor: product.seller?.name || 'Unknown Vendor',
+            timestamp: product.updatedAt,
+            type: 'normal'
+          });
+        }
+      }
+    }
+    
+    // Sort by timestamp and limit
+    const sortedActivities = activities
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+      .slice(0, 15)
+      .map(activity => ({
+        ...activity,
+        timestamp: new Date(activity.timestamp).toLocaleTimeString()
+      }));
+    
+    res.json(sortedActivities);
+    
+  } catch (error) {
+    console.error('Error getting real activity feed:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
 module.exports = router;
