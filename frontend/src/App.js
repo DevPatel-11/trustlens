@@ -17,6 +17,7 @@ import VendorDashboard from './pages/VendorDashboard';
 import ProductDetail   from './pages/ProductDetail';
 import EditProduct from './pages/EditProduct';
 import CustomerDashboard from './pages/CustomerDashboard';
+import CustomerProductInfo from './pages/CustomerProductInfo';
 function App() {
   return (
     <ThemeProvider>
@@ -33,6 +34,7 @@ function App() {
             <Route path="/vendor/signup"   element={<VendorSignup />} />
             <Route path="/vendor/login"    element={<VendorLogin />} />
             <Route path="/customer/dashboard" element={<CustomerDashboard />} />
+            <Route path="/customer/:id" element={<CustomerProductInfo />} />
             {/* Admin */}
             <Route path="/admin/login"     element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />

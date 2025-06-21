@@ -42,6 +42,11 @@ export const deleteProduct = id => api.delete(`/products/${id}`);
 export const updateProduct = (id, data) => api.put(`/products/${id}`, data);
 
 export const apiService = {
+
+  buyProduct: (id) => api.put(`/products/${id}/buy`),
+  returnProduct: (id) => api.put(`/products/${id}/return`),
+
+
   getCustomerDetails: () =>
   api.get('/auth/customer/me', {
     headers: {

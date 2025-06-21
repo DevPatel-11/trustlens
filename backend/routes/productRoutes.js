@@ -4,6 +4,8 @@ const multer = require('multer');
 const Product = require('../models/Product');
 const ImageAnalyzer = require('../utils/imageAnalyzer');
 const protectVendor = require('../middleware/authMiddleware')('vendor');
+const { buyProduct, returnProduct } = require('../controllers/productController');
+const verifyToken = require('../middleware/verifyTokenMiddleware');
 
 // Initialize image analyzer
 const imageAnalyzer = new ImageAnalyzer();
@@ -210,5 +212,9 @@ router.get('/flagged/all', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+router.put('/:id/buy', verifyToken, buyProduct);
+router.put('/:id/return', verifyToken, returnProduct);
+
 
 module.exports = router;
