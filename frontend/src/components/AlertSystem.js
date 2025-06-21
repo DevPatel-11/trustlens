@@ -26,7 +26,7 @@ const AlertSystem = () => {
       }
     });
     const alertsData = await response.json();
-    console.log('Fetched alerts:', alertsData.length); // Debug log
+
     
     setAlerts(alertsData);
     calculateStats(alertsData); // This should update stats
@@ -49,7 +49,7 @@ const AlertSystem = () => {
     low: alertsData.filter(a => a.severity === 'Low').length
   };
   
-  console.log('Calculated stats:', stats); // Debug log to verify counts
+
   setStats(stats);
 };
 
@@ -70,7 +70,7 @@ const AlertSystem = () => {
 
   const resolveAlert = async (alertId) => {
   try {
-    console.log('Resolving alert:', alertId);
+
 
     const response = await fetch(`http://localhost:3001/api/alerts/${alertId}`, {
       method: 'PUT',
@@ -87,7 +87,7 @@ const AlertSystem = () => {
     }
 
     const result = await response.json();
-    console.log('Alert resolved successfully:', result);
+
 
     // FORCE COMPLETE REFRESH
     setSelectedAlert(null);
@@ -101,8 +101,7 @@ const AlertSystem = () => {
         });
         const freshAlerts = await freshResponse.json();
         
-        console.log('Fresh alerts after resolve:', freshAlerts.length);
-        console.log('Resolved alerts:', freshAlerts.filter(a => a.status === 'Resolved').length);
+
         
         setAlerts(freshAlerts);
         calculateStats(freshAlerts);
@@ -135,7 +134,7 @@ const AlertSystem = () => {
       // Removed 'source' field as it's not in your schema
     };
 
-    console.log('Creating test alert:', testAlert);
+
 
     const response = await fetch('http://localhost:3001/api/alerts', {
       method: 'POST',
@@ -152,7 +151,7 @@ const AlertSystem = () => {
     }
 
     const result = await response.json();
-    console.log('Alert creation response:', result);
+
 
     await fetchAlerts();
     alert('Test alert created successfully!');
@@ -370,7 +369,7 @@ const AlertSystem = () => {
     </button>
     <button
       onClick={() => {
-        console.log('Refreshing alerts...');
+
         fetchAlerts();
       }}
       className="w-full text-left p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors duration-200"
@@ -391,8 +390,34 @@ const AlertSystem = () => {
           <div className="p-6">
             {filteredAlerts.length === 0 ? (
               <div className="text-center text-gray-500 dark:text-gray-400 py-8">
-                <p>No alerts found with current filters.</p>
-                <p className="text-sm">Try adjusting your filters or create a test alert!</p>
+                {alerts.length === 0 ? (
+                  <>
+                    <div className="text-4xl mb-4">✅</div>
+                    <p className="font-medium text-green-600 dark:text-green-400">No critical alerts active</p>
+                    <p className="text-sm mt-2">Your system is running smoothly</p>
+                    <p className="text-xs mt-1 text-gray-400">Create test alerts or wait for real security events</p>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-4xl mb-4">🔍</div>
+                    <p className="font-medium">No alerts match your current filters</p>
+                    <p className="text-sm mt-2">Try adjusting your status or severity filters</p>
+                    <div className="mt-4 space-x-2">
+                      <button
+                        onClick={() => {setFilter('all'); setSeverityFilter('all');}}
+                        className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors duration-200"
+                      >
+                        Clear Filters
+                      </button>
+                      <button
+                        onClick={createTestAlert}
+                        className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded transition-colors duration-200"
+                      >
+                        Create Test Alert
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             ) : (
               <div className="space-y-4">

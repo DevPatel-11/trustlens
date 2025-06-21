@@ -21,6 +21,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  ipAddress: {
+    type: String,
+    default: null
+  },
   trustScore: {
     type: Number,
     default: 50

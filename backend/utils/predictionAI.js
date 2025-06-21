@@ -116,9 +116,11 @@ class PredictionAI {
     const outcome = currentGap <= 0 ? 'yes' : // Already at target
                    confidence > 60 ? 'yes' : 'no';
     
+    const finalConfidence = Math.max(10, Math.min(90, confidence));
+    
     return {
       outcome,
-      confidence: Math.max(10, Math.min(90, confidence)),
+      confidence: finalConfidence,
       reasoning: reasoning.length > 0 ? reasoning : ['Standard trust analysis applied']
     };
   }
@@ -173,13 +175,19 @@ class PredictionAI {
   // Generate market suggestions based on AI analysis
   static async generateMarketSuggestions(limit = 5) {
     try {
+      console.log(`🤖 Generating AI market suggestions (limit: ${limit})...`);
+      
       const users = await User.find().limit(20).sort({ createdAt: -1 });
+      console.log(`📊 Analyzing ${users.length} users`);
+      
       const suggestions = [];
       
       for (const user of users) {
         // Trust score prediction market
         const trustPrediction = await this.predictTrustScore(user._id, 30, 70);
-        if (trustPrediction.confidence > 60) {
+        
+        // Lower confidence threshold from 60 to 45 for more suggestions
+        if (trustPrediction.confidence > 45) {
           suggestions.push({
             type: 'trust_score_prediction',
             targetUser: user._id,
@@ -191,7 +199,9 @@ class PredictionAI {
         
         // Fraud likelihood market
         const fraudPrediction = await this.predictFraudLikelihood(user._id, 14);
-        if (fraudPrediction.confidence > 65) {
+        
+        // Lower confidence threshold from 65 to 40 for more suggestions
+        if (fraudPrediction.confidence > 40) {
           suggestions.push({
             type: 'fraud_likelihood',
             targetUser: user._id,
@@ -201,12 +211,15 @@ class PredictionAI {
           });
         }
         
-        if (suggestions.length >= limit) break;
+        if (suggestions.length >= limit) {
+          break;
+        }
       }
       
+      console.log(`✅ Generated ${suggestions.length} AI market suggestions`);
       return suggestions.slice(0, limit);
     } catch (error) {
-      console.error('Market suggestion error:', error);
+      console.error('❌ Market suggestion error:', error);
       return [];
     }
   }

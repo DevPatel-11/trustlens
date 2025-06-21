@@ -23,7 +23,7 @@ const Navigation = () => {
   { id: 'marketplace', name: 'Marketplace', icon: '🛒' },
   { id: 'predictions', name: 'Prediction Market', icon: '🎯' },
   { id: 'alerts', name: 'Alert System', icon: '🚨' },
-  { id: 'community', name: 'Analytics', icon: '📈' }
+  { id: 'community', name: 'Community Validation', icon: '🏛️' }
 ];
 
 

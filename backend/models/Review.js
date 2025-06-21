@@ -161,6 +161,27 @@ const reviewSchema = new mongoose.Schema({
     }
   },
   communityValidation: {
+    isAIGenerated: {
+      type: Boolean,
+      default: false
+    },
+    status: {
+      type: String,
+      enum: ['Active', 'Flagged', 'Removed'],
+      default: 'Active'
+    },
+    flagCount: {
+      type: Number,
+      default: 0
+    },
+    reportCount: {
+      type: Number,
+      default: 0
+    },
+    helpfulVotes: {
+      type: Number,
+      default: 0
+    },
     totalVotes: {
       type: Number,
       default: 0
@@ -172,16 +193,11 @@ const reviewSchema = new mongoose.Schema({
     flaggedVotes: {
       type: Number,
       default: 0
+    },
+    lastUpdated: {
+      type: Date,
+      default: Date.now
     }
-  },
-  isAIGenerated: {
-    type: Boolean,
-    default: false
-  },
-  status: {
-    type: String,
-    enum: ['Active', 'Flagged', 'Removed'],
-    default: 'Active'
   },
   aiAnalysisData: {
     type: Object,
