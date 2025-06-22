@@ -22,6 +22,94 @@ export const loginCustomer  = data => api.post('/auth/customer/login', data);
 export const signupVendor   = data => api.post('/vendor/vendor/signup', data);
 export const loginVendor    = data => api.post('/vendor/vendor/login', data);
 
+// ===================================
+// VENDOR PRODUCT MANAGEMENT API
+// ===================================
+
+// Get all products for a vendor
+export const getVendorProducts = (vendorId, params = {}) => {
+  const queryString = new URLSearchParams(params).toString();
+  const url = queryString ? `/vendor/vendors/${vendorId}/products?${queryString}` : `/vendor/vendors/${vendorId}/products`;
+  return api.get(url);
+};
+
+// Get single product for vendor
+export const getVendorProduct = (vendorId, productId) => 
+  api.get(`/vendor/vendors/${vendorId}/products/${productId}`);
+
+// Create new product for vendor
+export const createVendorProduct = (vendorId, productData) => {
+  const formData = new FormData();
+  
+  // Append all product data
+  Object.keys(productData).forEach(key => {
+    if (key === 'images' && Array.isArray(productData[key])) {
+      // Handle file uploads
+      productData[key].forEach(file => {
+        formData.append('images', file);
+      });
+    } else if (key === 'inventory' && typeof productData[key] === 'object') {
+      // Stringify inventory data
+      formData.append(key, JSON.stringify(productData[key]));
+    } else {
+      formData.append(key, productData[key]);
+    }
+  });
+  
+  return api.post(`/vendor/vendors/${vendorId}/products`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
+
+// Update product for vendor
+export const updateVendorProduct = (vendorId, productId, productData) =>
+  api.put(`/vendor/vendors/${vendorId}/products/${productId}`, productData);
+
+// Delete product for vendor
+export const deleteVendorProduct = (vendorId, productId) =>
+  api.delete(`/vendor/vendors/${vendorId}/products/${productId}`);
+
+// Get vendor analytics
+export const getVendorAnalytics = (vendorId) =>
+  api.get(`/vendor/vendors/${vendorId}/analytics`);
+
+// Update product inventory
+export const updateProductInventory = (vendorId, productId, inventory) =>
+  api.put(`/vendor/vendors/${vendorId}/products/${productId}/inventory`, { inventory });
+
+// Get vendor categories
+export const getVendorCategories = (vendorId) =>
+  api.get(`/vendor/vendors/${vendorId}/categories`);
+
+// ===================================
+// VENDOR ORDER MANAGEMENT API
+// ===================================
+
+// Get all orders for a vendor
+export const getVendorOrders = (vendorId, params = {}) => {
+  const queryString = new URLSearchParams(params).toString();
+  const url = queryString ? `/vendor/vendors/${vendorId}/orders?${queryString}` : `/vendor/vendors/${vendorId}/orders`;
+  return api.get(url);
+};
+
+// Get vendor order analytics
+export const getVendorOrderAnalytics = (vendorId) =>
+  api.get(`/vendor/vendors/${vendorId}/orders/analytics`);
+
+// Get vendor order statistics summary
+export const getVendorOrderStats = (vendorId) =>
+  api.get(`/vendor/vendors/${vendorId}/orders/stats/summary`);
+
+// Get single order details for vendor
+export const getVendorOrder = (vendorId, orderId) =>
+  api.get(`/vendor/vendors/${vendorId}/orders/${orderId}`);
+
+// Update order status (vendor action)
+export const updateVendorOrderStatus = (vendorId, orderId, statusData) =>
+  api.put(`/vendor/vendors/${vendorId}/orders/${orderId}/status`, statusData);
+
 export const apiService = {
   // User APIs
   getUsers: () => api.get('/users'),
@@ -95,6 +183,23 @@ export const apiService = {
   injectFraud: () => api.post('/products/inject-fraud'),
   getRealtimeStats: () => api.get('/products/stats/realtime'),
   getRealtimeActivity: () => api.get('/products/activity/realtime'),
+
+  // Order APIs
+  placeOrder: (orderData) => api.post('/orders', orderData),
+  getCustomerOrders: (customerId) => api.get(`/orders/customer/${customerId}`),
+  getVendorOrders: (vendorId) => api.get(`/orders/vendor/${vendorId}`),
+  getOrderById: (orderId) => api.get(`/orders/${orderId}`),
+  updateOrderStatus: (orderId, statusData) => api.put(`/orders/${orderId}/status`, statusData),
+  cancelOrder: (orderId, reason) => api.post(`/orders/${orderId}/cancel`, { reason }),
+  getAllOrders: (params) => api.get('/orders', { params }),
+  getOrderStats: () => api.get('/orders/stats/overview'),
+
+  // Vendor Order Management APIs
+  getVendorOrdersList: (vendorId, params) => getVendorOrders(vendorId, params),
+  getVendorOrderAnalytics: (vendorId) => getVendorOrderAnalytics(vendorId),
+  getVendorOrderStats: (vendorId) => getVendorOrderStats(vendorId),
+  getVendorOrderDetails: (vendorId, orderId) => getVendorOrder(vendorId, orderId),
+  updateVendorOrderStatus: (vendorId, orderId, statusData) => updateVendorOrderStatus(vendorId, orderId, statusData),
 };
 
 export default apiService;

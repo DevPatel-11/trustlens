@@ -14,7 +14,7 @@ const alertSchema = new mongoose.Schema({
   },
   targetType: {
     type: String,
-    enum: ['User', 'Product', 'Review'],
+    enum: ['User', 'Product', 'Review', 'Vendor'],
     required: true
   },
   severity: {

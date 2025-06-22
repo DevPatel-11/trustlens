@@ -1,12 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import Navigation from './Navigation';
 import Dashboard from './Dashboard';
+import MarketplaceSimulator from './MarketplaceSimulator';
+import TrustDNAProfiler from './TrustDNAProfiler';
+import PredictionMarket from './PredictionMarket';
+import CommunityValidation from './CommunityValidation';
+import ThemeToggle from './ThemeToggle';
+import ProductTracker from './ProductTracker';
+import AlertSystem from './AlertSystem';
+import EnhancedReviewAuth from './EnhancedReviewAuth';
 
 const AdminDashboard = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('dashboard');
   const location = useLocation();
+
+  const tabs = [
+    { id: 'dashboard', name: 'Dashboard', icon: '📊' },
+    { id: 'analytics', name: 'TrustDNA', icon: '🤖' },
+    { id: 'product-tracker', name: 'Product Tracker', icon: '📦' },
+    { id: 'review-auth', name: 'Review Auth', icon: '🔍' },
+    { id: 'marketplace', name: 'Marketplace', icon: '🛒' },
+    { id: 'predictions', name: 'Prediction Market', icon: '🎯' },
+    { id: 'alerts', name: 'Alert System', icon: '🚨' },
+    { id: 'community', name: 'Community Validation', icon: '🏛️' }
+  ];
 
   useEffect(() => {
     checkAuthentication();
@@ -44,6 +63,29 @@ const AdminDashboard = () => {
     setIsAuthenticated(false);
   };
 
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return <Dashboard />;
+      case 'analytics':
+        return <TrustDNAProfiler />;
+      case 'product-tracker':
+        return <ProductTracker />;
+      case 'review-auth':
+        return <EnhancedReviewAuth />;
+      case 'marketplace':
+        return <MarketplaceSimulator />;
+      case 'predictions':
+        return <PredictionMarket />;
+      case 'alerts':
+        return <AlertSystem />;
+      case 'community':
+        return <CommunityValidation />;
+      default:
+        return <Dashboard />;
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
@@ -73,6 +115,7 @@ const AdminDashboard = () => {
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              <ThemeToggle />
               <div className="text-sm text-gray-600 dark:text-gray-300">
                 Welcome, Admin
               </div>
@@ -87,35 +130,32 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Admin Content */}
-      <div className="flex">
-        {/* Admin Navigation - Hidden for now, will be navigation tabs */}
-        <div className="hidden">
-          <Navigation />
+      {/* Admin Navigation Tabs */}
+      <nav className="bg-white dark:bg-gray-800 shadow-sm transition-colors duration-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex space-x-8">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                  activeTab === tab.id
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
+                }`}
+              >
+                <span className="mr-2">{tab.icon}</span>
+                {tab.name}
+              </button>
+            ))}
+          </div>
         </div>
+      </nav>
 
-        {/* Main Content Area */}
-        <div className="flex-1">
-          {location.pathname === '/admin/dashboard' ? (
-            <Dashboard />
-          ) : (
-            // Placeholder for other admin routes
-            <div className="p-8">
-              <div className="text-center">
-                <div className="text-6xl mb-4">🚧</div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Admin Feature Coming Soon</h2>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">This admin section is under development.</p>
-                <button
-                  onClick={() => window.location.href = '/admin/dashboard'}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
-                >
-                  Go to Dashboard
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Admin Content */}
+      <main className="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
+        {renderContent()}
+      </main>
     </div>
   );
 };

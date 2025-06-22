@@ -3,19 +3,73 @@ const router = express.Router();
 const Review = require('../models/Review');
 const RealAIAnalyzer = require('../utils/realAIAnalyzer');
 const EnhancedReviewAuth = require('../utils/enhancedReviewAuth');
+const LinguisticAnalyzer = require('../utils/linguisticAnalyzer');
 
-// Initialize the real AI analyzer
+// Initialize the real AI analyzer and linguistic analyzer
 const aiAnalyzer = new RealAIAnalyzer();
+const linguisticAnalyzer = new LinguisticAnalyzer();
 
-// Create a new review with enhanced AI authenticity analysis
+// Create a new review with enhanced AI authenticity analysis and linguistic fingerprinting
 router.post('/', async (req, res) => {
   try {
     const reviewData = req.body;
     
-    console.log('🤖 Starting real AI analysis for review...');
+    console.log('🤖 Starting real AI analysis and linguistic fingerprinting for review...');
     
-    // Use REAL HuggingFace AI analysis
-    const aiAnalysis = await aiAnalyzer.analyzeReviewWithHuggingFace(reviewData.content);
+    // Extract behavioral metrics and IP data
+    const ipAddress = req.ip || req.connection.remoteAddress || req.socket.remoteAddress;
+    const userAgent = req.get('User-Agent');
+    
+    // Add behavioral tracking data
+    if (reviewData.behaviorMetrics) {
+      reviewData.behaviorMetrics.ipAddress = ipAddress;
+      reviewData.behaviorMetrics.userAgent = userAgent;
+      reviewData.behaviorMetrics.deviceFingerprint = req.get('X-Device-Fingerprint') || 'unknown';
+    }
+    
+    // Generate linguistic fingerprint
+    console.log('🔍 Generating linguistic fingerprint...');
+    const fingerprint = linguisticAnalyzer.generateLinguisticFingerprint(
+      reviewData.content, 
+      reviewData.behaviorMetrics || {}
+    );
+    
+    // Calculate enhanced authenticity score
+    const userHistory = {}; // TODO: Fetch user's review history
+    const orderData = {
+      purchaseVerified: reviewData.purchaseVerified || false,
+      orderTrustScore: 50 // TODO: Fetch from order data
+    };
+    
+    const authenticityResult = linguisticAnalyzer.calculateAuthenticityScore(
+      fingerprint,
+      userHistory,
+      orderData
+    );
+    
+    // Add enhanced data to review (but don't let it block the save)
+    if (fingerprint && authenticityResult) {
+      reviewData.enhancedFingerprint = fingerprint;
+      reviewData.enhancedAuthenticity = authenticityResult;
+    }
+    reviewData.behaviorMetrics = reviewData.behaviorMetrics || {};
+    reviewData.purchaseVerified = reviewData.purchaseVerified || false;
+    
+    // Use REAL HuggingFace AI analysis (with fallback)
+    let aiAnalysis;
+    try {
+      aiAnalysis = await aiAnalyzer.analyzeReviewWithHuggingFace(reviewData.content);
+    } catch (hfError) {
+      console.log('HuggingFace API unavailable, using local analysis only');
+      // Fallback to local analysis
+      aiAnalysis = {
+        authenticityScore: authenticityResult?.authenticityScore || 75,
+        isAIGenerated: false,
+        huggingFaceResults: null,
+        localAnalysis: { sentiment: { score: 0 } },
+        detailedAnalysis: { textLength: reviewData.content.length, complexity: 'medium' }
+      };
+    }
     
     // Update review data with real AI results
     reviewData.authenticityScore = aiAnalysis.authenticityScore;
@@ -38,9 +92,29 @@ router.post('/', async (req, res) => {
     };
     
     const review = new Review(reviewData);
-    await review.save();
+    
+    let savedReview;
+    let isUpdate = false;
+    try {
+      savedReview = await review.save();
+    } catch (saveError) {
+      if (saveError.code === 11000) {
+        // Handle duplicate key error by updating existing review
+        console.log('🔄 Duplicate review detected, updating existing review...');
+        savedReview = await Review.findOneAndUpdate(
+          { product: reviewData.product, reviewer: reviewData.reviewer },
+          reviewData,
+          { new: true, upsert: true }
+        );
+        isUpdate = true;
+        console.log('✅ Review updated successfully');
+      } else {
+        throw saveError;
+      }
+    }
     
     console.log(`✅ AI Analysis Complete - Authenticity: ${aiAnalysis.authenticityScore}%, AI Generated: ${aiAnalysis.isAIGenerated}`);
+    console.log(`🔍 Linguistic Analysis Complete - Enhanced Authenticity: ${authenticityResult.authenticityScore}%, Risk: ${authenticityResult.riskLevel}`);
     
     // Start enhanced authentication process
     try {
@@ -52,11 +126,20 @@ router.post('/', async (req, res) => {
         sessionData: { timestamp: new Date() }
       };
       
-      const authRecord = await EnhancedReviewAuth.authenticateReview(review._id, sourceData);
+      const authRecord = await EnhancedReviewAuth.authenticateReview(savedReview._id, sourceData);
       
       res.status(201).json({
-        ...review.toObject(),
+        ...savedReview.toObject(),
+        isUpdate: isUpdate,
+        message: isUpdate ? 'Review updated successfully' : 'Review submitted successfully',
         aiAnalysisResults: aiAnalysis,
+        linguisticFingerprint: {
+          fingerprintId: fingerprint.fingerprintId,
+          authenticityScore: authenticityResult.authenticityScore,
+          riskLevel: authenticityResult.riskLevel,
+          flags: authenticityResult.flags,
+          analysis: authenticityResult.analysis
+        },
         enhancedAuthentication: {
           authenticationId: authRecord._id,
           overallScore: authRecord.overallAuthenticationScore,
@@ -69,8 +152,17 @@ router.post('/', async (req, res) => {
       console.error('Enhanced authentication failed:', authError);
       // Return review even if enhanced auth fails
       res.status(201).json({
-        ...review.toObject(),
+        ...savedReview.toObject(),
+        isUpdate: isUpdate,
+        message: isUpdate ? 'Review updated successfully' : 'Review submitted successfully',
         aiAnalysisResults: aiAnalysis,
+        linguisticFingerprint: {
+          fingerprintId: fingerprint.fingerprintId,
+          authenticityScore: authenticityResult.authenticityScore,
+          riskLevel: authenticityResult.riskLevel,
+          flags: authenticityResult.flags,
+          analysis: authenticityResult.analysis
+        },
         enhancedAuthentication: { error: 'Authentication failed', fallback: true }
       });
     }
@@ -82,13 +174,29 @@ router.post('/', async (req, res) => {
 
 
 // Get all reviews with AI analysis data
+// Get reviews by product ID
+router.get('/product/:productId', async (req, res) => {
+  try {
+    const reviews = await Review.find({ product: req.params.productId })
+      .populate('reviewer', 'username email')
+      .sort({ createdAt: -1 });
+    res.json(reviews);
+  } catch (error) {
+    console.error('Error fetching reviews by product:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// GET /api/reviews - Get all reviews (admin dashboard)
 router.get('/', async (req, res) => {
   try {
     const reviews = await Review.find()
-      .populate('product', 'name price')
-      .populate('reviewer', 'username');
+      .populate('product', 'name category')
+      .populate('reviewer', 'username email')
+      .sort({ createdAt: -1 });
     res.json(reviews);
   } catch (error) {
+    console.error('Error fetching reviews:', error);
     res.status(500).json({ message: error.message });
   }
 });

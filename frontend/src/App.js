@@ -9,8 +9,13 @@ import Navigation from './components/Navigation';
 import Welcome from './pages/Welcome';
 import CustomerSignup from './pages/CustomerSignup';
 import CustomerLogin from './pages/CustomerLogin';
+import CustomerDashboard from './pages/CustomerDashboard';
+import BrowseProducts from './pages/BrowseProducts';
+import MyOrders from './pages/MyOrders';
+import ProductDetails from './pages/ProductDetails';
 import VendorSignup from './pages/VendorSignup';
 import VendorLogin from './pages/VendorLogin';
+import VendorDashboard from './pages/VendorDashboard';
 import AdminLogin from './pages/AdminLogin';
 
 // Admin Components
@@ -34,10 +39,15 @@ const AppContent = () => {
         {/* Customer flows */}
         <Route path="/customer/signup" element={<CustomerSignup />} />
         <Route path="/customer/login" element={<CustomerLogin />} />
+                    <Route path="/customer/dashboard" element={<CustomerDashboard />} />
+            <Route path="/customer/products" element={<BrowseProducts />} />
+            <Route path="/customer/products/:productId" element={<ProductDetails />} />
+            <Route path="/customer/orders" element={<MyOrders />} />
 
         {/* Vendor flows */}
         <Route path="/vendor/signup" element={<VendorSignup />} />
         <Route path="/vendor/login" element={<VendorLogin />} />
+        <Route path="/vendor/dashboard" element={<VendorDashboard />} />
 
         {/* Admin flows */}
         <Route path="/admin/login" element={<AdminLogin />} />

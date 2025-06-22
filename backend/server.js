@@ -23,6 +23,7 @@ const predictionRoutes = require('./routes/predictionRoutes');
 const communityRoutes = require('./routes/communityRoutes');
 const enhancedReviewRoutes = require('./routes/enhancedReviewRoutes');
 const productLifecycleRoutes = require('./routes/productLifecycleRoutes');
+const orderRoutes = require('./routes/orderRoutes');
 
 //auth 
 
@@ -73,6 +74,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/predictions', predictionRoutes);
 app.use('/api/community', communityRoutes);
+app.use('/api/orders', orderRoutes);
 // Set socket handler for enhanced review routes
 enhancedReviewRoutes.setSocketHandler(socketHandler);
 app.use('/api/enhanced-reviews', enhancedReviewRoutes);

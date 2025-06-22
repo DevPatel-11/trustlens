@@ -157,9 +157,9 @@ const MarketplaceSimulator = () => {
       
       // Add error activity
       setLiveActivity(prev => [{
-        id: Date.now(),
+      id: Date.now(),
         message: '❌ Fraud injection failed - Check backend connection',
-        timestamp: new Date().toLocaleTimeString(),
+      timestamp: new Date().toLocaleTimeString(),
         type: 'error'
       }, ...prev.slice(0, 14)]);
     }
@@ -222,18 +222,18 @@ const MarketplaceSimulator = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
+  <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
+    <div className="max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white">🛒 TrustLens Marketplace</h2>
           <p className="text-gray-600 dark:text-gray-300 mt-2">Real-time fraud detection powered by MongoDB Atlas data</p>
-        </div>
+      </div>
 
-        {/* Controls */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8 transition-colors duration-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+      {/* Controls */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8 transition-colors duration-200">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
               <button 
                 onClick={fetchAllRealData}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors duration-200 flex items-center space-x-2"
@@ -269,10 +269,10 @@ const MarketplaceSimulator = () => {
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">{realtimeStats.totalTransactions}</p>
                 <p className="text-xs text-gray-400 dark:text-gray-500">From MongoDB Atlas</p>
               </div>
-            </div>
-          </div>
-          
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors duration-200">
+        </div>
+      </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors duration-200">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-red-100 dark:bg-red-900 rounded-md flex items-center justify-center">
@@ -285,9 +285,9 @@ const MarketplaceSimulator = () => {
                 <p className="text-xs text-gray-400 dark:text-gray-500">Authenticity &lt; 70%</p>
               </div>
             </div>
-          </div>
+        </div>
           
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors duration-200">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors duration-200">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-md flex items-center justify-center">
@@ -302,10 +302,10 @@ const MarketplaceSimulator = () => {
                 <p className="text-xs text-gray-400 dark:text-gray-500">
                   {realtimeStats.fraudDetectionRate === 0 ? 'No frauds detected' : 'Real-time calculation'}
                 </p>
-              </div>
-            </div>
-          </div>
-          
+        </div>
+        </div>
+      </div>
+
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors duration-200">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -323,16 +323,16 @@ const MarketplaceSimulator = () => {
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          {/* Product Grid */}
+        {/* Product Grid */}
           <div className="xl:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow transition-colors duration-200">
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
                 <span className="mr-2">🛍️</span>
                 Real Product Listings
                 <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">({products.length} products)</span>
               </h3>
-            </div>
-            <div className="p-6">
+          </div>
+          <div className="p-6">
               {products.length === 0 ? (
                 <div className="text-center py-8">
                   <div className="text-gray-400 text-4xl mb-4">📦</div>
@@ -364,14 +364,14 @@ const MarketplaceSimulator = () => {
                         <div className="flex items-center justify-between mb-3">
                           <span className="text-3xl">{product.image}</span>
                           <div className="flex flex-col items-end space-y-1">
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              product.status === 'Verified' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' :
-                              product.status === 'Flagged' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' :
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      product.status === 'Verified' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' :
+                      product.status === 'Flagged' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' :
                               product.status === 'Under Review' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' :
                               'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200'
-                            }`}>
-                              {product.status}
-                            </span>
+                    }`}>
+                      {product.status}
+                    </span>
                             <span className={`px-2 py-1 text-xs font-medium rounded-full ${trustBadge.color}`}>
                               {trustBadge.icon} {trustBadge.text}
                             </span>
@@ -402,7 +402,7 @@ const MarketplaceSimulator = () => {
                               🔒 {product.authenticityScore > 0 ? `${product.authenticityScore.toFixed(1)}%` : '⚠️ Unknown'} authentic
                             </div>
                           </div>
-                        </div>
+                  </div>
                         
                         {/* Real Authenticity Score Bar */}
                         <div className="mb-3">
@@ -410,13 +410,13 @@ const MarketplaceSimulator = () => {
                             <span>Authenticity Score</span>
                             <span className={product.authenticityScore > 0 ? '' : 'text-red-600 dark:text-red-400'}>
                               {product.authenticityScore > 0 ? `${product.authenticityScore.toFixed(1)}%` : 'Unknown'}
-                            </span>
-                          </div>
-                          <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
-                            <div 
+                    </span>
+                  </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                      <div 
                               className={`h-2 rounded-full transition-all duration-300 ${authenticityColor}`}
                               style={{ width: `${Math.max(product.authenticityScore || 0, 5)}%` }}
-                            ></div>
+                      ></div>
                           </div>
                           <div className="text-right mt-1">
                             <span className={`text-xs font-medium ${
@@ -434,26 +434,26 @@ const MarketplaceSimulator = () => {
                         <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                           <span>🏆 Trust: {product.vendor?.trustScore ? `${product.vendor.trustScore}%` : '⚠️ N/A'}</span>
                           <span>📦 Return: {product.vendor?.returnRate !== undefined ? `${product.vendor.returnRate}%` : '⚠️ N/A'}</span>
-                        </div>
-                      </div>
+                    </div>
+                  </div>
                     );
                   })}
                 </div>
               )}
-            </div>
           </div>
+        </div>
 
           {/* Real Live Activity Feed */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow transition-colors duration-200">
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow transition-colors duration-200">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
                 <span className="mr-2">📡</span>
                 Real Activity Feed
                 <span className="ml-2 text-xs text-green-600 dark:text-green-400">● LIVE</span>
               </h3>
-            </div>
-            <div className="p-6">
-              <div className="space-y-3 max-h-96 overflow-y-auto">
+          </div>
+          <div className="p-6">
+            <div className="space-y-3 max-h-96 overflow-y-auto">
                 {liveActivity.length === 0 ? (
                   <div className="text-center py-4">
                     <div className="text-gray-400 text-2xl mb-2">📡</div>
@@ -469,20 +469,20 @@ const MarketplaceSimulator = () => {
                         activity.type === 'success' ? 'bg-green-500' :
                         activity.type === 'error' ? 'bg-red-600' :
                         'bg-blue-500'
-                      }`}></div>
+                  }`}></div>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm ${
+                    <p className={`text-sm ${
                           activity.type === 'fraud' ? 'text-red-700 dark:text-red-300 font-medium' : 
                           activity.type === 'warning' ? 'text-yellow-700 dark:text-yellow-300 font-medium' :
                           activity.type === 'success' ? 'text-green-700 dark:text-green-300' :
                           activity.type === 'error' ? 'text-red-800 dark:text-red-200 font-medium' :
                           'text-gray-700 dark:text-gray-300'
-                        }`}>
-                          {activity.message}
-                        </p>
+                    }`}>
+                      {activity.message}
+                    </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{activity.timestamp}</p>
-                      </div>
-                    </div>
+                  </div>
+                </div>
                   ))
                 )}
               </div>
@@ -493,13 +493,13 @@ const MarketplaceSimulator = () => {
                 >
                   🔄 Refresh Activity Feed
                 </button>
-              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default MarketplaceSimulator;
