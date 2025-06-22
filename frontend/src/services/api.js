@@ -35,7 +35,6 @@ export const loginAdmin = data => api.post('/admin/login', data);
 
 // export const loginVendor      = data => api.post('/vendor/vendor/login', data);
 export const getVendorProfile = ()   => api.get('/vendor/profile');
-export const getVendorProducts= ()   => api.get('/vendor/products');
 export const getProductDetail = prodId => api.get(`/vendor/products/${prodId}`);
 export const createProduct = data => api.post('/products', data);
 export const deleteProduct = id => api.delete(`/products/${id}`);
