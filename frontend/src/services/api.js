@@ -9,6 +9,14 @@ const api = axios.create({
   },
 });
 
+// ✅ Automatically attach token to requests if available
+api.interceptors.request.use(cfg => {
+  const token = localStorage.getItem('token');  // works for customer, vendor, or admin
+  if (token) cfg.headers.Authorization = `Bearer ${token}`;
+  return cfg;
+});
+
+
 // at top:
 
 
@@ -19,8 +27,19 @@ const api = axios.create({
 
 export const signupCustomer = data => api.post('/auth/customer/signup', data);
 export const loginCustomer  = data => api.post('/auth/customer/login', data);
+
 export const signupVendor   = data => api.post('/vendor/vendor/signup', data);
 export const loginVendor    = data => api.post('/vendor/vendor/login', data);
+export const loginAdmin = data => api.post('/admin/login', data);
+
+
+// export const loginVendor      = data => api.post('/vendor/vendor/login', data);
+export const getVendorProfile = ()   => api.get('/vendor/profile');
+export const getVendorProducts= ()   => api.get('/vendor/products');
+export const getProductDetail = prodId => api.get(`/vendor/products/${prodId}`);
+export const createProduct = data => api.post('/products', data);
+export const deleteProduct = id => api.delete(`/products/${id}`);
+export const updateProduct = (id, data) => api.put(`/products/${id}`, data);
 
 // ===================================
 // VENDOR PRODUCT MANAGEMENT API
@@ -111,6 +130,18 @@ export const updateVendorOrderStatus = (vendorId, orderId, statusData) =>
   api.put(`/vendor/vendors/${vendorId}/orders/${orderId}/status`, statusData);
 
 export const apiService = {
+
+  buyProduct: (id) => api.put(`/products/${id}/buy`),
+  returnProduct: (id) => api.put(`/products/${id}/return`),
+
+
+  getCustomerDetails: () =>
+  api.get('/auth/customer/me', {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
+    },
+  }),
+
   // User APIs
   getUsers: () => api.get('/users'),
   createUser: (userData) => api.post('/users', userData),
@@ -137,14 +168,15 @@ export const apiService = {
   getProducts: () => api.get('/products'),
   createProduct: (productData) => api.post('/products', productData),
   getProductById: (id) => api.get(`/products/${id}`),
+  updateProduct: (id, productData) => api.put(`/products/${id}`, productData),
   
-  // NEW: Product Return Tracking APIs
+  // Product Return Tracking APIs
   trackProductPurchase: (productId) => api.post(`/products/${productId}/purchase`),
   trackProductReturn: (productId, reason) => api.post(`/products/${productId}/return`, { reason }),
   getProductReturnAnalytics: (productId) => api.get(`/products/${productId}/return-analytics`),
   getProductAuditLogs: (productId) => api.get(`/products/${productId}/audit-logs`),
 
-  // NEW: Product Lifecycle APIs
+  // Product Lifecycle APIs
   getProductLifecycleInsights: (sellerId) => api.get(`/product-lifecycle/insights/${sellerId}`),
   getProductLifecycleAnalytics: (productId) => api.get(`/product-lifecycle/analytics/${productId}`),
   getProductLifecycleTimeline: (productId) => api.get(`/product-lifecycle/timeline/${productId}`),

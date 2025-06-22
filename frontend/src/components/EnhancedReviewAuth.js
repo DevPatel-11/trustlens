@@ -39,13 +39,13 @@ const EnhancedReviewAuth = () => {
     const socket = new WebSocket('ws://localhost:3001');
     
     socket.onopen = () => {
-      console.log('🔌 WebSocket connected for real-time review updates');
+
     };
     
     socket.onmessage = (event) => {
       try {
         const update = JSON.parse(event.data);
-        console.log('📡 Real-time update received:', update);
+
         
         if (update.type === 'review_status_update') {
           showToast(`📡 Review ${update.reviewId} status updated to ${update.newStatus}`, 'success');
@@ -60,7 +60,7 @@ const EnhancedReviewAuth = () => {
     };
     
     socket.onclose = () => {
-      console.log('🔌 WebSocket connection closed');
+
     };
     
     socket.onerror = (error) => {
