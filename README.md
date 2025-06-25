@@ -138,13 +138,18 @@ npm start
 
 > Full administrative control panel including fraud insights, community validation review flow, and platform-wide trust scoring.
 
-| ![](assets\AdminDashboard.png) | ![](assets\TrustDna.png) |
-|----------------------------------|----------------------------------|
-| ![](assets\ProductTracker1.png) | ![](assets\ProductTracker2.png) |
-| ![](assets\ProductTracker3.png) | ![](assets\ReviewAuth1.png) |
-| ![](assets\ReviewAuth2.png) | ![](assets\Marketplace1.png) |
-| ![](assets\PredictionMarket.png) | ![](assets\AlertSystem1.png) |
-| ![](assets\AlertSystem2.png) | ![](assets\CommunityValidation.png) |
+![](assets\AdminDashboard.png)
+![](assets\TrustDna.png)
+![](assets\ProductTracker1.png)
+![](assets\ProductTracker2.png)
+![](assets\ProductTracker3.png)
+![](assets\ReviewAuth1.png)
+![](assets\ReviewAuth2.png)
+![](assets\Marketplace1.png)
+![](assets\PredictionMarket.png)
+![](assets\AlertSystem1.png)
+![](assets\AlertSystem2.png)
+![](assets\CommunityValidation.png)
 
 ---
 
@@ -152,7 +157,8 @@ npm start
 
 > Vendors can manage product inventory, monitor alerts, and track warehouse activity in real-time.
 
-| ![](assets\Vendor Dashboard.png) | ![](assets\VendorAlertDashboard.png) |
+![](assets\Vendor Dashboard.png)
+![](assets\VendorAlertDashboard.png) 
 
 ---
 
@@ -160,7 +166,8 @@ npm start
 
 > Customers can browse, review products, track orders, and validate vendor trust before purchasing.
 
-| ![](assets\CustomerDashboard.png) | ![](assets\CustomerBrowseProduct.png) |
+![](assets\CustomerDashboard.png) 
+![](assets\CustomerBrowseProduct.png)
 
 ---
 
