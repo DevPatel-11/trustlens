@@ -272,6 +272,9 @@ router.post('/:id/purchase', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id).populate('seller');
     if (!product) return res.status(404).json({ message: 'Product not found' });
+    if (!product.seller || !product.seller._id) {
+      return res.status(400).json({ message: 'Product is missing a valid seller. Please assign a seller to this product.' });
+    }
     
     const oldTotalSold = product.totalSold;
     const oldReturnRate = product.returnRate;
@@ -299,6 +302,33 @@ router.post('/:id/purchase', async (req, res) => {
     
     await product.save();
     
+    // Recalculate seller trust score based on new return rate
+    let trustResult = null;
+    if (product.seller) {
+      const TrustAnalyzer = require('../utils/trustAnalyzer');
+      trustResult = await TrustAnalyzer.calculateSellerTrustWithReturnRate(product.seller._id);
+      // Add trust recalculation to audit log
+      if (trustResult) {
+        product.adminLogs.push({
+          action: 'trust_recalculated',
+          performedBy: 'system',
+          timestamp: new Date(),
+          details: {
+            reason: 'Trust score recalculated due to purchase tracking',
+            sellerType: trustResult.sellerType,
+            trustScoreChange: trustResult.trustScoreChange
+          },
+          oldValue: {
+            sellerTrustScore: trustResult.oldTrustScore
+          },
+          newValue: {
+            sellerTrustScore: trustResult.newTrustScore
+          }
+        });
+        await product.save();
+      }
+    }
+    
     console.log(`📦 Purchase tracked for product: ${product.name} (Total sold: ${product.totalSold})`);
     
     res.json({
@@ -310,7 +340,8 @@ router.post('/:id/purchase', async (req, res) => {
         totalSold: product.totalSold,
         totalReturned: product.totalReturned,
         returnRate: product.returnRate
-      }
+      },
+      trustResult
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -323,6 +354,9 @@ router.post('/:id/return', async (req, res) => {
     const { reason } = req.body;
     const product = await Product.findById(req.params.id).populate('seller');
     if (!product) return res.status(404).json({ message: 'Product not found' });
+    if (!product.seller || !product.seller._id) {
+      return res.status(400).json({ message: 'Product is missing a valid seller. Please assign a seller to this product.' });
+    }
     
     const oldTotalReturned = product.totalReturned;
     const oldReturnRate = product.returnRate;
@@ -670,6 +704,89 @@ router.get('/', async (req, res) => {
   } catch (error) {
     console.error('Error fetching products:', error);
     res.status(500).json({ message: error.message });
+  }
+});
+
+// User: Buy product (synchronized with admin logic)
+router.put('/:id/buy', async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id).populate('seller');
+    if (!product || product.quantity <= 0) return res.status(400).json({ message: 'Out of stock' });
+
+    const oldTotalSold = product.totalSold;
+    const oldQuantity = product.quantity;
+    const oldReturnRate = product.returnRate;
+
+    product.quantity -= 1;
+    product.totalSold += 1;
+
+    // Add audit log
+    product.adminLogs.push({
+      action: 'purchase_tracked',
+      performedBy: 'user',
+      timestamp: new Date(),
+      details: {
+        reason: 'User purchased this product'
+      },
+      oldValue: {
+        totalSold: oldTotalSold,
+        quantity: oldQuantity,
+        returnRate: oldReturnRate
+      },
+      newValue: {
+        totalSold: product.totalSold,
+        quantity: product.quantity,
+        returnRate: product.returnRate
+      }
+    });
+
+    await product.save();
+
+    res.json({ message: 'Product purchased successfully', product });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// User: Return product (synchronized with admin logic)
+router.put('/:id/return', async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id).populate('seller');
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+
+    const oldTotalReturned = product.totalReturned;
+    const oldQuantity = product.quantity;
+    const oldReturnRate = product.returnRate;
+
+    product.totalReturned += 1;
+    product.quantity += 1;
+
+    // Add audit log
+    product.adminLogs.push({
+      action: 'return_tracked',
+      performedBy: 'user',
+      timestamp: new Date(),
+      details: {
+        reason: 'User returned this product',
+        description: 'User tracked a return for this product'
+      },
+      oldValue: {
+        totalReturned: oldTotalReturned,
+        quantity: oldQuantity,
+        returnRate: oldReturnRate
+      },
+      newValue: {
+        totalReturned: product.totalReturned,
+        quantity: product.quantity,
+        returnRate: product.returnRate
+      }
+    });
+
+    await product.save();
+
+    res.json({ message: 'Product returned successfully', product });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

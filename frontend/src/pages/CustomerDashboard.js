@@ -8,6 +8,7 @@ export default function CustomerDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -24,6 +25,8 @@ export default function CustomerDashboard() {
       navigate('/customer/login');
     }
   }, [navigate]);
+
+
 
   const fetchUserData = async (userId) => {
     try {
@@ -104,12 +107,17 @@ export default function CustomerDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {user.username}!
-          </h2>
-          <p className="text-gray-600">
-            Account created: {new Date(user.createdAt).toLocaleDateString()}
-          </p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                Welcome back, {user.username}!
+              </h2>
+              <p className="text-gray-600">
+                Account created: {new Date(user.createdAt).toLocaleDateString()}
+              </p>
+            </div>
+
+          </div>
         </div>
 
         {/* Stats Grid */}
@@ -123,7 +131,6 @@ export default function CustomerDashboard() {
                   {user.trustScore}
                 </p>
               </div>
-              <div className="text-3xl">🛡️</div>
             </div>
           </div>
 
@@ -136,7 +143,6 @@ export default function CustomerDashboard() {
                   {user.riskLevel}
                 </p>
               </div>
-              <div className="text-3xl">⚠️</div>
             </div>
           </div>
 
@@ -147,7 +153,6 @@ export default function CustomerDashboard() {
                 <p className="text-sm text-gray-600 mb-1">Transactions</p>
                 <p className="text-2xl font-bold text-blue-600">{user.transactionCount}</p>
               </div>
-              <div className="text-3xl">💳</div>
             </div>
           </div>
 
@@ -158,10 +163,50 @@ export default function CustomerDashboard() {
                 <p className="text-sm text-gray-600 mb-1">Account Age</p>
                 <p className="text-2xl font-bold text-green-600">{user.accountAge} days</p>
               </div>
-              <div className="text-3xl">📅</div>
             </div>
           </div>
         </div>
+
+        {/* Real-time Activity */}
+        {user.recentActivity && (
+          <div className="bg-white rounded-lg shadow p-6 mb-8">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Recent Activity</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <p className="text-sm text-gray-600 mb-1">Last Order</p>
+                <p className="text-lg font-medium text-gray-900">
+                  {user.recentActivity.lastOrderDate 
+                    ? new Date(user.recentActivity.lastOrderDate).toLocaleDateString()
+                    : 'No orders yet'
+                  }
+                </p>
+                {user.recentActivity.daysSinceLastOrder !== null && (
+                  <p className="text-xs text-gray-500">
+                    {user.recentActivity.daysSinceLastOrder} days ago
+                  </p>
+                )}
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-gray-600 mb-1">Total Spent</p>
+                <p className="text-lg font-medium text-green-600">
+                  ₹{user.recentActivity.totalSpent.toFixed(2)}
+                </p>
+                <p className="text-xs text-gray-500">
+                  Last 5 orders
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-gray-600 mb-1">Recent Orders</p>
+                <p className="text-lg font-medium text-blue-600">
+                  {user.recentActivity.recentOrders}
+                </p>
+                <p className="text-xs text-gray-500">
+                  Last 5 orders
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Profile Information */}
         <div className="bg-white rounded-lg shadow p-6 mb-8">
@@ -179,10 +224,7 @@ export default function CustomerDashboard() {
               <label className="block text-sm text-gray-600 mb-1">Mobile Number</label>
               <p className="text-lg font-medium text-gray-900">{user.mobileNumber}</p>
             </div>
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">IP Address</label>
-              <p className="text-lg font-medium text-gray-900">{user.ipAddress || 'Not recorded'}</p>
-            </div>
+
           </div>
         </div>
 
@@ -194,13 +236,13 @@ export default function CustomerDashboard() {
               onClick={() => navigate('/customer/products')}
               className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
             >
-              🛍️ Browse Products
+              Browse Products
             </button>
             <button 
               onClick={() => navigate('/customer/orders')}
               className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition"
             >
-              📦 My Orders
+              My Orders
             </button>
 
           </div>

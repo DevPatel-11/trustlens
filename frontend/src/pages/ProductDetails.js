@@ -192,18 +192,7 @@ export default function ProductDetails() {
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="space-y-4">
-              <button 
-                disabled={product.quantity === 0}
-                className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
-              >
-                {product.quantity > 0 ? 'Add to Cart' : 'Out of Stock'}
-              </button>
-              <button className="w-full border border-blue-600 text-blue-600 py-3 px-6 rounded-lg hover:bg-blue-50 transition">
-                Add to Wishlist
-              </button>
-            </div>
+
           </div>
         </div>
 

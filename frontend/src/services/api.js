@@ -231,6 +231,9 @@ export const apiService = {
   getVendorOrderStats: (vendorId) => getVendorOrderStats(vendorId),
   getVendorOrderDetails: (vendorId, orderId) => getVendorOrder(vendorId, orderId),
   updateVendorOrderStatus: (vendorId, orderId, statusData) => updateVendorOrderStatus(vendorId, orderId, statusData),
+
+  // Linguistic Analysis API
+  getUserLinguisticAnalysis: (userId) => api.get(`/users/${userId}/linguistic-analysis`),
 };
 
 export default apiService;
