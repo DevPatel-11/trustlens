@@ -162,7 +162,7 @@ export default function ProductDetails() {
                 </div>
                 <div className="text-right">
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${getTrustScoreColor(product.seller?.trustScore || 50)}`}>
-                    Trust: {product.seller?.trustScore || 50}
+                    Trust: {product.seller?.trustScore !== undefined ? Number(product.seller.trustScore).toFixed(2) : '50.00'}
                   </span>
                 </div>
               </div>
