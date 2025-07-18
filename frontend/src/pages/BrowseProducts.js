@@ -275,7 +275,7 @@ export default function BrowseProducts() {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Vendor Trust:</span>
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${getTrustScoreColor(product.vendor?.trustScore || 0)}`}>
-                      {product.vendor?.trustScore || 0}
+                      {product.vendor?.trustScore !== undefined ? Number(product.vendor.trustScore).toFixed(2) : '0.00'}
                     </span>
                   </div>
 
@@ -330,7 +330,7 @@ export default function BrowseProducts() {
                       onClick={() => handleBuyNow(product)}
                       className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition"
                     >
-                      🛒 Buy Now
+                      Buy Now
                     </button>
                   ) : (
                     <button disabled className="w-full bg-gray-400 text-white py-2 px-4 rounded-lg cursor-not-allowed">
