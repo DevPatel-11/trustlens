@@ -125,7 +125,7 @@ const MarketplaceSimulator = () => {
     if (name.includes('keyboard') || name.includes('techno')) return '⌨️';
     if (name.includes('graphics') || name.includes('card') || name.includes('gpu')) return '🖥️';
     if (name.includes('smartwatch') || name.includes('pulse')) return '⌚';
-    return '📦'; // Default
+    return '📦'; 
   };
 
   const injectRealFraud = async () => {
@@ -158,7 +158,7 @@ const MarketplaceSimulator = () => {
       // Add error activity
       setLiveActivity(prev => [{
       id: Date.now(),
-        message: '❌ Fraud injection failed - Check backend connection',
+        message: 'Fraud injection failed - Check backend connection',
       timestamp: new Date().toLocaleTimeString(),
         type: 'error'
       }, ...prev.slice(0, 14)]);
@@ -168,7 +168,7 @@ const MarketplaceSimulator = () => {
   // Real trust badge based on actual vendor trust scores
   const getTrustBadge = (vendor) => {
     if (!vendor || !vendor.name) {
-      return { text: '⚠️ Missing Vendor', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200', icon: '⚠️' };
+      return { text: ' Missing Vendor', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200', icon: '⚠️' };
     }
     
     const score = vendor.trustScore || 0;
@@ -176,7 +176,7 @@ const MarketplaceSimulator = () => {
     if (score >= 80) return { text: 'Elite Seller', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200', icon: '👑' };
     if (score >= 60) return { text: 'Trusted', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200', icon: '✅' };
     if (score >= 40) return { text: 'Verified', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200', icon: '🔷' };
-    return { text: '⚠️ Low Trust', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200', icon: '⚠️' };
+    return { text: ' Low Trust', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200', icon: '⚠️' };
   };
 
   // Real authenticity score colors based on actual scores
@@ -191,7 +191,7 @@ const MarketplaceSimulator = () => {
     if (score >= 90) return 'Excellent';
     if (score >= 70) return 'Good';
     if (score > 0) return 'Poor';
-    return '⚠️ Unknown';
+    return ' Unknown';
   };
 
   // Real fraud detection rate with color coding

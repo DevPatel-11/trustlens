@@ -34,7 +34,7 @@ export default function ReviewAnalysisResults({ analysisData, onClose }) {
         {/* Fallback warning */}
         {analysisData?.aiAnalysisResults?.huggingFaceResults === null && (
           <div className="mb-4 p-3 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 rounded">
-            ⚠️ AI analysis is using fallback logic. Results may not be accurate.
+             AI analysis is using fallback logic. Results may not be accurate.
           </div>
         )}
 
@@ -57,7 +57,7 @@ export default function ReviewAnalysisResults({ analysisData, onClose }) {
           {/* Authenticity Analysis */}
           <div className="bg-blue-50 rounded-lg p-6">
             <h4 className="font-bold text-blue-900 mb-4 flex items-center">
-              <span className="text-2xl mr-2">🛡️</span>
+              <span className="text-2xl mr-2"></span>
               Authenticity Analysis
             </h4>
             
@@ -110,7 +110,7 @@ export default function ReviewAnalysisResults({ analysisData, onClose }) {
           {/* AI Analysis */}
           <div className="bg-purple-50 rounded-lg p-6">
             <h4 className="font-bold text-purple-900 mb-4 flex items-center">
-              <span className="text-2xl mr-2">🤖</span>
+              <span className="text-2xl mr-2"></span>
               AI Content Analysis
             </h4>
             
@@ -194,7 +194,7 @@ export default function ReviewAnalysisResults({ analysisData, onClose }) {
         {/* Trust & Security Notice */}
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-start space-x-3">
-            <div className="text-blue-600 text-xl">🔒</div>
+            <div className="text-blue-600 text-xl"></div>
             <div className="flex-1">
               <h4 className="font-medium text-blue-900 mb-1">Trust & Security</h4>
               <p className="text-sm text-blue-700">
